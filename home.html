@@ -1,0 +1,25 @@
+<div class="page" data-page="home" >
+<div class="page-content">
+	<div class="list-block list-block-custom">
+		<ul>
+		{{#each this.devices}}
+			<li><a href="about.html?item={{this.name}}&address={{this.address}}"
+				class="item-link item-content item-content-custom">
+					<div class="item-media">
+						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
+					</div>
+					<div class="item-inner item-inner-custom">  
+					<span class="badge {{this.connected}}"></span>
+						<div class="item-title item-title-custom">{{this.name}}</div>    
+						<div class="item-after">
+						    {{#each this.list}}
+							<div class="{{this.name}}"></div>  
+							{{/each}}
+						</div>
+					</div>
+			</a></li>
+	    {{/each}}  
+		</ul>
+	</div>
+</div>
+</div>

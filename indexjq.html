@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--
+Description:
+
+	Example for creating a custom GATT encoding with mbed BLE device.
+
+Requirements:
+
+	An mbed enabled BLE platform running the code from:
+	http://developer.mbed.org/teams/Bluetooth-Low-Energy/code/BLE_GATT_Example/
+
+Credits:
+
+	ARM mbed [-_-]~
+
+	http://mbed.org
+-->
+<html>
+
+<head>
+   <style type="text/css">
+     #img_connected_id{
+	    float:left;   
+     }
+     
+     .borderButton{
+		-webkit-border-radius: 50%;
+		-moz-border-radius: 50%;
+		border-radius: 50%;
+     }
+     
+	#battery_image {
+	  text-align: center;
+	  margin-left:0 auto;
+	  margin-right:0 auto;
+	}
+
+    </style>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, user-scalable=no,
+		shrink-to-fit=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+
+	<title>Gatt di Pignato</title>  
+ 
+	<script>
+	// Redirect console.log to Evothings Workbench.
+	if (window.hyper && window.hyper.log) { console.log = hyper.log }   
+	</script>
+  
+	<script src="cordova.js"></script>      
+	<link rel="stylesheet" href="libs/jquery/jquery.mobile-1.4.5.min.css" />
+	<link rel="stylesheet" href="libs/font-awesome/css/font-awesome.min.css">
+	
+	<script src="libs/jquery/jquery-1.11.1.min.js"></script>
+	<script src="libs/jquery/jquery.mobile-1.4.5.min.js"></script>   
+	<script src="libs/evothings/evothings.js"></script>
+	<script src="libs/evothings/ui/ui.js"></script>
+	<script src="libs/evothings/easyble/easyble.js"></script>    
+	<script src="app.js"></script>  
+     
+</head>
+
+<body ontouchstart=""><!-- ontouchstart="" enables low-delay CSS transitions. -->
+<div data-role="page" id="index">
+
+	<div data-role="header">
+		<h1>Gatt di pignato</h1>
+	</div><!-- /header -->
+
+	<div role="main"  >
+    <ul data-role="listview" data-inset="true" data-divider-theme="d" id="list_device">
+      </ul>
+     </div>
+	<div data-role="footer" data-position="fixed" data-theme="b">
+		<div data-role="navbar">
+			<ul>    
+				<li><a href="index.html"  data-prefetch="true" data-icon="home" data-transition="slide">My Device</a></li>
+				<li><a href="#" data-prefetch="true" id ="scatta" data-icon="gear" data-transition="slide">Photo</a></li>
+				<li><a href="#" data-prefetch="true" id ="addNewDevice"  data-icon="plus" data-transition="slide">Add Device</a></li>     
+				<li><a href="#" data-prefetch="true" id ="reset" data-icon="minus">Reset</a></li> 
+			</ul>
+		</div><!-- /navbar -->
+	</div><!-- /footer -->
+</div>
+
+        
+
+<div data-role="page" id="pageDetail">
+
+	<div data-role="header" data-add-back-btn="true" >
+		<h1 id="title_detail"></h1>
+    <a href="#" class="ui-btn ui-btn-right ui-shadow ui-corner-all ui-icon-plus ui-btn-icon-notext ui-btn-b ui-btn-inline">Plus</a>
+	</div><!-- /header -->
+  
+	<div data-role="content" id="contentDetail">
+	
+
+    <div id="battery_image">
+       <i class="fa fa-battery-full fa-3x" aria-hidden="true" style="color:green;"></i>
+     </div>      
+    
+   </div><!-- /grid-c -->  
+	  
+        
+	<div data-role="footer" data-position="fixed" data-theme="b">  
+		<div data-role="navbar">
+			<ul>      
+				<li><a href="#"  data-prefetch="true" data-icon="" id="suona"><i class="fa fa-bell-o fa-3x" aria-hidden="true"></i>
+				<li><a href="#"  data-prefetch="true" data-icon=""><i class="fa fa-camera-retro fa-3x" aria-hidden="true"></i></a></li>
+			</ul>   
+		</div><!-- /navbar -->
+	</div><!-- /footer -->  
+</div>
+
+<div data-role="page" id="newDevice">
+	<div data-role="content" id="contentDetail">
+        Hold the button on the iTrack device until you hear a beep and the LED start flashing        
+   </div>   
+</div>
+
+<div data-role="page" id="optionNewDevice">
+	<div data-role="content" id="contentDetail">
+       <label for="text-basic">Text input:</label>   
+       <input name="nameDevice" id="nameDevice" value="" type="text">     
+       <button class="ui-shadow ui-btn ui-corner-all" id="saveNewDevice">Save</button>     
+   </div>   
+</div>
+
+
+</body>
+
+</html>

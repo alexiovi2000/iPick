@@ -1,0 +1,17 @@
+{
+  "name": "pick",
+  "version": "1.0",
+  "title": "Basic Template App",
+  "description": "pick itrack",
+  "tags": [],
+  "libraries": [
+    {
+      "name": "jquery",
+      "version": "2.1.1"
+    }
+  ],
+  "index-file": "index.html",
+  "uuid": "a4129053-83bc-466f-874f-029204bf0d55",
+  "icon": "app-icon.png",
+  "doc-url": "https://evothings.com/2.1/doc/examples/template-basic-app.html"
+}

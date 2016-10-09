@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>My App</title>    
+
+  <link rel="stylesheet" href="dist/css/framework7.ios.min.css">
+  <link rel="stylesheet" href="dist/css/framework7.ios.colors.min.css"> 
+<!--  <link rel="stylesheet" href="dist/css/framework7.material.min.css">
+<link rel="stylesheet" href="dist/css/framework7.material.min.css"> -->
+    
+<link rel="stylesheet" href="dist/css/my-app.css">
+<link rel="stylesheet" href="dist/css/font-awesome/css/font-awesome.min.css">
+<script src="cordova.js"></script>       
+<script src="libs/evothings/evothings.js"></script>
+<script src="libs/evothings/ui/ui.js"></script>
+<script src="libs/jquery/jquery.js"></script>  
+</head>
+<body>
+
+	<div class="statusbar-overlay"></div>        
+
+	<div class="panel-overlay"></div>
+
+	<div class="panel panel-left panel-cover">
+		<div class="list-block list-block-panel">
+			<center><img class="img-custom img_panel" src="dist/img/PIK_bianco_small.png"></center>
+			<ul>
+     <li>
+      <div class="item-content">
+        <div class="item-media"><i class="fa fa-bell-slash" aria-hidden="true"></i></div>
+        <div class="item-inner item-inner-custom">
+          <div class="item-title item-title-custom label">Silenzioso</div>
+          <div class="item-input item-input-custom">
+            <label class="label-switch">
+              <input type="checkbox">
+              <div class="checkbox"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+    </li>
+     <li>
+      <div class="item-content">
+        <div class="item-media"><i class="fa fa-graduation-cap" aria-hidden="true"></i></div>
+        <div class="item-inner item-inner-custom">
+          <div class="item-title item-title-custom label">Tutorial</div>
+          <!--  <div class="item-input">
+            <input type="email" placeholder="E-mail">
+          </div>-->
+        </div>
+      </div>
+    </li>
+    </ul>
+		</div>
+	</div>
+  
+	<div class="views tabs">
+     
+    <!--     PAGE HOME       -->
+
+		<div id="homeView" class="view view-main tab active">
+            <div class="navbar navbar-custom" id="NavigationTabHome">
+				<div class="navbar-inner">
+					<div class="left">
+						<a href="#" class="link icon-only open-panel"> <i
+							class="icon icon-bars"></i></a>
+					</div>
+					<div class="center sliding"><img class="img-custom" src="dist/img/PIK_azzurro_small.png"></div>
+					<div class="right">
+						<a href="#" class="link icon-only" id="add_deviceId">+</a>
+					</div>
+				</div>
+          </div>  
+            <div class="pages navbar-through" >
+           
+			
+		</div>
+		</div>
+		
+    <!--    PAGE LIST  -->
+		<div id="listView" class="view view-list tab">
+		    <div class="navbar navbar-custom" id="NavigationTabList">
+				<div class="navbar-inner">
+					<div class="left">
+						<a href="#" class="link icon-only open-panel"> <i
+							class="icon icon-bars"></i></a>
+					</div>
+					<div class="center sliding"><img class="img-custom" src="dist/img/PIK_azzurro_small.png"></div>
+					<div class="right">
+						<a href="#" class="link icon-only" id="add_listId">+</a>
+					</div>
+				</div>
+          </div>  
+			 <div class="pages navbar-through" >
+           
+           
+              </div> 
+			
+		</div>
+
+		<div class="toolbar tabbar" id="toolbar_id">
+			<div class="toolbar-inner">
+				<a href="#listView" id="listTab" class="tab-link"><span class="tabbar-label">Lists</span>
+				</a> <a href="#homeView" class="tab-link active"> <span
+					class="tabbar-label">Home</span>
+				</a> <a href="about.html" class="tab-link"> <span
+					class="tabbar-label">Maps</span>
+				</a>
+			</div>
+		</div>
+
+	</div>
+
+
+<script type="text/template" id="homeTpl">
+    
+
+</script>    
+<script type="text/template" id="navBarList">
+  <div class="navbar-inner">
+					<div class="left">
+						<a href="#" class="link icon-only open-panel"> <i
+							class="icon icon-bars"></i></a>
+					</div>
+				       <div class="center sliding"><img class="img-custom logo_pick" src="dist/img/PIK_azzurro_small.png"></div>   
+					<div class="right">    
+						<a href="#" id="add_deviceId" class="link icon-only">+</a>  
+					</div>  
+	</div>
+</script>  
+<script type="text/template" id="navBarListSimple">
+ <div class="navbar navbar-custom" id="navigationNewDevice">
+  <div class="navbar-inner">
+			<div class="center sliding"><img src="dist/img/PIK_azzurro_small.png"></div>   
+	</div>
+ </div>
+</script>  
+<script>
+	// Redirect console.log to Evothings Workbench.
+	if (window.hyper && window.hyper.log) { console.log = hyper.log }   
+</script>
+<script type="text/javascript" src="dist/js/framework7.min.js"></script>  
+
+<!--	<script type="text/javascript" src="dist/js/my-app.js"></script> -->  
+<script src="libs/evothings/easyble/easyble.dist.js"></script>         
+<script type="text/javascript" src="dist/js/app.js"></script>     
+
+</body>
+</html>

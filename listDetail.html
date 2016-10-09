@@ -1,0 +1,75 @@
+<div class="pages navbar-through toolbar-through">
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="left">
+      <a href="#" class="back link"> 
+        <i class="icon icon-back"></i>
+        <span>Back</span>
+       </a>
+    </div>  
+    <div class="center sliding">{{url_query.title}}</div>
+    <div class="right">
+     <!--  <a href="#" class="link icon-only open-panel"><i class="icon icon-bars"></i></a> -->
+      <a href="#" class="link open-picker">+</a>
+      <a href="settingList.html?listName=Informatica"><i class="fa fa-cog" aria-hidden="true"></i></a>
+    </div>
+  </div>
+</div>
+	<div data-page="listDetailPage" class="page">
+		<div class="page-content">
+			<div class="list-block media-list">
+				<ul id="listDeviceInListId">
+				{{#each this.deviceinlist}}
+			  <li class="chooseDeviceToAddList" id="{{this.id}}">
+			   <div class="item-content">
+					<div class="item-media">
+						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
+					</div>
+					<div class="item-inner item-inner-custom">  
+					  <div class="item-title-row"> 
+						<div class="item-title item-title-custom">{{this.name}}</div>    
+					</div>  
+				</div>
+				</div>
+			</li>    
+			{{/each}}
+				</ul>   
+
+			</div>
+		</div>
+		
+		<div class="picker-modal picker-1">
+    <div class="toolbar">
+      <div class="toolbar-inner">
+        <div class="left"></div>
+        <div class="right"><a href="#" class="close-picker">Done</a></div>
+      </div>
+    </div>
+    <div class="picker-modal-inner">
+      <div class="content-block">
+       <div class="list-block media-list">
+		<ul>
+		{{#each this.devices}}       
+			<li class="chooseDeviceToAddList" id="{{this.id}}">
+			   <div class="item-content">
+					<div class="item-media">
+						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
+					</div>
+					<div class="item-inner item-inner-custom">  
+					  <div class="item-title-row"> 
+						<div class="item-title item-title-custom">{{this.name}}</div>    
+					</div>  
+				</div>
+				</div>
+			</li>    
+	    {{/each}}  
+		</ul>
+	</div>
+      </div>
+    </div>
+  </div>
+
+	</div>
+	
+	
+</div>
