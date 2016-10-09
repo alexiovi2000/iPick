@@ -30,19 +30,17 @@ var app = {
 	    destinationType:'' ,
 	    t:0,
 		deviceJustConnected:new Array(),  
-		      
-		deleteAllDevice(){
+		deleteAllDevice:function(){
 			localStorage.setItem('myDevices',null);
 		},
-		
-		bindResetAll(){    
+		bindResetAll:function(){    
 			$("#reset").off().on("tap",function(){
 				app.deleteAllDevice();
 				app.initialize();      
 			});  
 			
 		},
-		
+		    
 		getMyDevice:function(callback,callback2){
 		  // this.myDevices = JSON.parse(localStorage.getItem('myDevices'));
 		  this.db.transaction(function(tx){
