@@ -251,13 +251,54 @@ var app = {
 		},   
 		pageInitList:function(){   
 			 app.iPickView.onPageInit('listPage', function (page) {
-				 console.log("exx");     
+				
+				 $$("#listTab").on('click',function(){
+					 $$('.listLi > i').removeClass('fa-check-square-all-conn');
+					 $$('.listLi > i').addClass('fa-check-square-not-all-conn');
+				 });
+				 
+				 
 				 app.listView.params.dynamicNavbar = true;
-				// clearInterval(app.intervalHome);
-				  $$("#add_listId").on('click',function(){
+
+				 $$("#add_listId").on('click',function(){
 					  app.addNewList();   
 				      $$("#add_listId").hide();    
-				  });             
+				  });   
+				  
+				    
+					$$('.listLi').on('click',function(e){
+						 var listToCheck = $$(this).prop('id')*1;
+						  //salvo temporaneamente l'href perchè altrimenti mi butta nel dettaglio
+						  var listLi = $$(this);
+						  var aParents = $$(this).parents( "a" );
+						  var href = aParents.attr("href");
+						  $$(this).parents( "a" ).removeAttr("href");
+						  app.db.transaction(function(tx){   
+							  tx.executeSql('SELECT d.id, d.name FROM devices d inner join deviceinlist t on d.id = t.iddevice where t.idlist = ? ', [listToCheck], 
+								 function(tx, results){
+								   var resultQuery = new Array();
+								   var len=results.rows.length;  
+								   var deviceDisconnected = '';
+								   for (var i=0;i<len;i++){  
+									   if (!app.checkDeviceIfConnectedById(results.rows.item(i).id)){
+										   deviceDisconnected+= results.rows.item(i).name + ' ';	   
+									   }
+								   }
+								   
+								   if (deviceDisconnected){ 
+									   alert("Sono disconnessi: "+deviceDisconnected);  
+									   listLi.children('i').addClass('fa-check-square-not-all-conn');
+									   listLi.children('i').removeClass('fa-check-square-all-conn');
+								   }  
+								   else{
+									   listLi.children('i').removeClass('fa-check-square-not-all-conn');
+									   listLi.children('i').addClass('fa-check-square-all-conn');
+								   }   
+								   aParents.attr('href', href);   
+								}, app.errorCB);          
+						  }, app.errorCB);   
+						 
+					});   
 				  
 			  });
 		},  
@@ -569,6 +610,16 @@ var app = {
 				 }
 			 } 
 		},  
+		checkDeviceIfConnectedById: function(id){
+			for (var dev in app.myDevices){
+				if (id == app.myDevices[dev].id){
+					if (app.myDevices[dev].connected == 'connected'){
+						return true;
+					}
+				}  
+			 } 
+			return false;
+		},
 		startScan: function(newDev)  
 		{ 
 		 
