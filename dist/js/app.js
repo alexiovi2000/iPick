@@ -12,6 +12,7 @@ var app = {
 		db:{},
 		viewMain:{},
 		listView:{},
+		mapView:{},
 		devices:[],
 		myDevices:[],
 		idNotification:1,
@@ -28,6 +29,7 @@ var app = {
 		pictureSource: '' ,  
 		numberReloadListPage:0,
 	    destinationType:'' ,
+	    currentPosition:{},
 	    t:0,
 		deviceJustConnected:new Array(),  
 		deleteAllDevice:function(){
@@ -44,7 +46,7 @@ var app = {
 		getMyDevice:function(callback,callback2){
 		  // this.myDevices = JSON.parse(localStorage.getItem('myDevices'));
 		  this.db.transaction(function(tx){
-			  tx.executeSql('SELECT id, name, address ,connected,image FROM devices', [], 
+			  tx.executeSql('SELECT id, name, address ,image FROM devices', [], 
 				 function(tx, results){    
 				           var len=results.rows.length;
 						   if (!len){
@@ -96,24 +98,23 @@ var app = {
 					name:name,
 					image:image,
 					list: [],
-					connected:'notconnected'
+					connected:'notconnected',
+					last_seen:Date.now()
+				
 			};
+			
 			myDev.push(obj); 
 			app.myDevices = myDev;
 			
-			//this.deleteAllFromDb();
-			  // this.myDevices = JSON.parse(localStorage.getItem('myDevices'));
-			
 		    this.db.transaction(function(tx){
-				  tx.executeSql('insert into devices (id,address,name,image,connected) values (?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image,obj.connected], 
-					 function(tx, results){   
+				  tx.executeSql('insert into devices (id,address,name,image, last_seen) values (?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image ,obj.last_seen], 
+					 function(tx, results){  
 					}, app.errorCB);
-			//localStorage.setItem('myDevices',JSON.stringify(myDev)); 
 		    });  
 		},    
 		deleteAllFromDb:function(){
 			  this.db.transaction(function(tx){
-				  tx.executeSql('delete from devices', [], 
+				  tx.executeSql('delete from devices', [],   
 					 function(tx, results){
 							console.log("eliminato tutto");  
 					}, app.errorCB)
@@ -204,9 +205,11 @@ var app = {
 			    this.destinationType = navigator.camera.DestinationType,  
 				this.db =  window.openDatabase("DatabasePick", "1.0", "Pick", 200000);
 				this.db.transaction(this.populateDB, this.errorCB);
+				//this.db.transaction(this.dropTables, this.errorCB);
+				//return;
 				this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome);     
-			
-		},
+			  
+		},    
 		successCB:function(){  
 			 app.db.transaction(app.queryDB, app.errorCB);    
 		},      
@@ -220,11 +223,16 @@ var app = {
 		errorCB:function(err) {
 	        console.log("Error processing SQL: "+JSON.stringify(err));
 	    },
-		populateDB:function(tx){
-			 tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICES (id unique,address,name,image,connected)');
+		populateDB:function(tx){  
+			 tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICES (id unique,address,name,image,long,lat, last_seen)');
 			 tx.executeSql('CREATE TABLE IF NOT EXISTS LISTS (id unique,name,image,color)');
 	         tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICEINLIST (idlist,iddevice)');    
-		},         
+		},  
+		dropTables:function(tx){
+			tx.executeSql('DROP TABLE  DEVICES ');
+			 tx.executeSql('DROP TABLE LISTS');
+	         tx.executeSql('DROP TABLE  DEVICEINLIST ');    
+		},
 		pageInitHome:function(){
 			
 			  app.iPickView.onPageInit('home', function (page) {
@@ -411,9 +419,13 @@ var app = {
 					    reload:true     
 					});         
 				  app.updateConnectionDeviceNotFound();
-				  //app.pageInitHome();      
-			  },4000);        
-		},    
+			  },4000);  
+			 
+			  
+			 /* app.intervalPosition = setInterval(function(){
+				  app.getCurrentPosition();
+			  },15000); */      
+		},      
 		  
 		stopStop:function(){
 			app.updateConnectionDeviceNotFound();
@@ -578,20 +590,30 @@ var app = {
            }	
            return false;
 		},
-		updateConnectionDeviceFound:function(address){  
+		updateConnectionDeviceFound:function(device){
 			 for (var i=0;i<this.myDevices.length;i++){
-				 if (this.myDevices[i].address == address ){
-					this.myDevices[i].connected = 'connected';         
-				 }          
-			 }   
-			 
-			  
-		},               
+				 if (this.myDevices[i].address == device.address){
+					 if (!this.myDevices[i].lastUpdate || (this.myDevices[i].lastUpdate  && (Date.now() - this.myDevices[i].lastUpdate) > 10000)){
+				     this.myDevices[i].lastUpdate = Date.now();
+					 this.myDevices[i].connected = 'connected';
+				/*	app.db.transaction(function(tx){
+					  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,this.myDevices[i].id], 
+						 function(tx, results){  
+						}, app.errorCB);
+			    });*/ 
+			    }
+					break;
+		     }          
+		  }  
+	     
+		},   
+		initMap: function(){
+		},
 		updateConnectionDeviceNotFound:function(){ 
 			var timeConnectionToCheck;
 			if (app.atBackground){
 				timeConnectionToCheck = 15000;
-			}else{
+			}else{  
 				timeConnectionToCheck = 7000;   
 			}  
 			 for (var dev in app.myDevices){
@@ -636,7 +658,9 @@ var app = {
 						if (newDev==true && !app.isMyDevice(device.address)){ 
 							app.connectToDevice(device.address,newDev);     
 						}else{      
-							 app.updateConnectionDeviceFound(device.address);  
+							if (!newDev){
+							 app.updateConnectionDeviceFound(device);
+							}
 						}    
 				    }    
 				},
@@ -674,7 +698,7 @@ var app = {
 						//app.deviceJustConnected.push(deviceAddress);
 						app.showInfo('Error: Connection failed: ' + errorCode + ' and deviceAddress: '+deviceAddress); 
 						device.close();   
-						app.connectToDevice(deviceAddress);
+						//app.connectToDevice(deviceAddress);
 						     
 					});
 				
@@ -726,16 +750,16 @@ var app = {
 			    {
 			     
 			      var paringMode = new Uint8Array(data)[0];
-			      if (paringMode == 1){    
+			      if (paringMode == 1){     
 			    	  
 			    	   app.stopStop();
 			    	   app.chooseOptionsNewDevice(device);        
 			    	   
 			      }else{         
-			    	  //device.close();  
+			    	  device.close();  
 			    	  //app.stopStop();               
 			      }
-			                
+			                   
 			    },      
 			    function(errorCode)
 			    {  
@@ -769,37 +793,32 @@ var app = {
 				   app.openCamera('camera-thmb','largeImage',device,app.setFotoNewDevice);	  
 				
 				});
-				      
-			/*	$$('#form-to-json').on('click', function(){
-					  var formData = app.iPickView.formToJSON('#OptionNewDevice');
-					  alert(JSON.stringify(formData));
-				});   */
 				
 				$$("#saveNewDevice").on('click',function(){
 					//if($$("#namePick_id").val() && app.newDeviceFoto){
 						app.saveNewDevice(device, $$("#namePick_id").val(), app.newDeviceFoto);
 						window.location='index.html';              
-						
-				//	}
-				
-				
 				});  
-				 
-				
-				
 		    });  
-		
-			
-			
-			/*$("#saveNewDevice").off().on('tap',function(){
-				
-				app.saveNewDevice(device);
-				
-			})*/
-			
-			
 		},
 		
+		getCurrentPosition: function(){
+			  onMapSuccess, app.onMapError,{enableHighAccuracy: true}
+		},
+	    onMapSuccess:function (position) {
+	    	/*app.db.transaction(function(tx){
+			  tx.executeSql('update devices set lat = ? , long = ? where id = ?', [position.coords.latitude,position.coords.longitude,idDevice], 
+				 function(tx, results){  
+				}, app.errorCB);
+	    });  */
+	    	app.currentPosition =  {	 
+		    'Lat': position.coords.latitude,
+		    'Long': position.coords.longitude
+	       };
+		},
+		onMapError:function(){
+			return '';
+		},
 		saveNewDevice:function(device,nameDevice,imageDevice){
 		  app.setMyDevice(device.address,nameDevice,imageDevice);
 		 // app.initialize();
@@ -885,7 +904,7 @@ var app = {
 		showInfo:function(t){
 			console.log(t);
 		}
-		
+			
 };  
 document.addEventListener('deviceready', function(){
 	app.initialize();       
@@ -902,6 +921,5 @@ document.addEventListener('resume', function(){
 	
 }, false); 
    
-         
-  
+        
  

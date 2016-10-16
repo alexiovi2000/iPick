@@ -263,9 +263,13 @@
 
 .redColor {
 	background: #c00; 
-	height: 50px;
 }
-
+.redColor:active {
+	background: #c00; 
+}
+.redColor:hover {
+	background: #c00; 
+}  
 .yellowColor {
   	background: yellow; 
 	height: 50px;

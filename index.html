@@ -15,13 +15,13 @@
     
 <link rel="stylesheet" href="dist/css/my-app.css">
 <link rel="stylesheet" href="dist/css/font-awesome/css/font-awesome.min.css">
-<script src="cordova.js"></script>       
-<script src="libs/evothings/evothings.js"></script>
+<script src="cordova.js"></script>    
+<script src="libs/evothings/evothings.js"></script>   
 <script src="libs/evothings/ui/ui.js"></script>
 <script src="libs/jquery/jquery.js"></script>  
 </head>
 <body>
-
+  
 	<div class="statusbar-overlay"></div>        
 
 	<div class="panel-overlay"></div>
@@ -102,13 +102,29 @@
               </div> 
 			
 		</div>
+		
+	   <div id="mapView" class="view view-main tab">
+            <div class="navbar navbar-custom" id="NavigationTabHome">
+				<div class="navbar-inner">
+					<div class="left">
+						<a href="#" class="link icon-only open-panel"> <i
+							class="icon icon-bars"></i></a>
+					</div>
+					<div class="center sliding"><img class="img-custom" src="dist/img/PIK_azzurro_small.png"></div>
+				</div>
+          </div>  
+            <div class="pages navbar-through" >
+           
+			
+		   </div>
+		</div>
 
 		<div class="toolbar tabbar" id="toolbar_id">
 			<div class="toolbar-inner">
 				<a href="#listView" id="listTab" class="tab-link"><span class="tabbar-label">Lists</span>
 				</a> <a href="#homeView" class="tab-link active"> <span
 					class="tabbar-label">Home</span>
-				</a> <a href="about.html" class="tab-link"> <span
+				</a> <a href="#mapView" class="tab-link"> <span
 					class="tabbar-label">Maps</span>
 				</a>
 			</div>
@@ -140,15 +156,15 @@
 	</div>
  </div>
 </script>  
-<script>
+<script>  
 	// Redirect console.log to Evothings Workbench.
 	if (window.hyper && window.hyper.log) { console.log = hyper.log }   
 </script>
 <script type="text/javascript" src="dist/js/framework7.min.js"></script>  
 
 <!--	<script type="text/javascript" src="dist/js/my-app.js"></script> -->  
-<script src="libs/evothings/easyble/easyble.dist.js"></script>         
-<script type="text/javascript" src="dist/js/app.js"></script>     
-
+<script src="libs/evothings/easyble/easyble.dist.js"></script>           
+<script type="text/javascript" src="dist/js/app.js"></script>        
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBf3Y04zoL9Ol86M-tSQ3rwezjn314ioX8" async defer></script>   
 </body>
 </html>
