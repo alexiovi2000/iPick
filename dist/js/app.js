@@ -27,10 +27,12 @@ var app = {
 		deviceSelected:{},  
 		deviceInList:[],
 		pictureSource: '' ,  
+		map:null,
 		numberReloadListPage:0,
 	    destinationType:'' ,
-	    currentPosition:{},
+	    currentPosition: null,
 	    t:0,
+	    mapJustResized:0,
 		deviceJustConnected:new Array(),  
 		deleteAllDevice:function(){
 			localStorage.setItem('myDevices',null);
@@ -46,7 +48,7 @@ var app = {
 		getMyDevice:function(callback,callback2){
 		  // this.myDevices = JSON.parse(localStorage.getItem('myDevices'));
 		  this.db.transaction(function(tx){
-			  tx.executeSql('SELECT id, name, address ,image FROM devices', [], 
+			  tx.executeSql('SELECT id, name, address , connected ,long, lat, image FROM devices', [], 
 				 function(tx, results){    
 				           var len=results.rows.length;
 						   if (!len){
@@ -107,7 +109,7 @@ var app = {
 			app.myDevices = myDev;
 			
 		    this.db.transaction(function(tx){
-				  tx.executeSql('insert into devices (id,address,name,image, last_seen) values (?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image ,obj.last_seen], 
+				  tx.executeSql('insert into devices (id,address,name,image,connected, last_seen) values (?,?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image ,obj.connected,obj.last_seen], 
 					 function(tx, results){  
 					}, app.errorCB);
 		    });  
@@ -182,6 +184,9 @@ var app = {
 			  
 				  app.listView = app.iPickView.addView('.view-list',{});  
 				  app.viewMain = app.iPickView.addView('.view-main', {});
+				  app.mapView  = app.iPickView.addView('.view-map',{});
+				  
+				  
 				 if (!app.myDevices.length){       
 						//app.showMyDevice();      
 					 app.disconnectToDevice();         
@@ -192,11 +197,13 @@ var app = {
 				  app.devicesRing = new Array();
 				  app.newDeviceFoto = {};
 				  app.loadLists();
+				  app.loadMap();
+				  app.initMap();
 				  app.pageInitHome();
 				  app.pageInitAbout();   
 		},
 		initialize:function(){      
-			   // this.deleteAllDevice();  
+			   // this.deleteAllDevice();    
 			    cordova.plugins.locationManager.requestAlwaysAuthorization();
 			    var delegate = new cordova.plugins.locationManager.Delegate();
 			    cordova.plugins.locationManager.setDelegate(delegate);
@@ -206,7 +213,7 @@ var app = {
 				this.db =  window.openDatabase("DatabasePick", "1.0", "Pick", 200000);
 				this.db.transaction(this.populateDB, this.errorCB);
 				//this.db.transaction(this.dropTables, this.errorCB);
-				//return;
+				//return;  
 				this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome);     
 			  
 		},    
@@ -224,10 +231,10 @@ var app = {
 	        console.log("Error processing SQL: "+JSON.stringify(err));
 	    },
 		populateDB:function(tx){  
-			 tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICES (id unique,address,name,image,long,lat, last_seen)');
+			 tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICES (id unique,address,name,image,connected, long,lat, last_seen)');
 			 tx.executeSql('CREATE TABLE IF NOT EXISTS LISTS (id unique,name,image,color)');
 	         tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICEINLIST (idlist,iddevice)');    
-		},  
+		},    
 		dropTables:function(tx){
 			tx.executeSql('DROP TABLE  DEVICES ');
 			 tx.executeSql('DROP TABLE LISTS');
@@ -241,7 +248,7 @@ var app = {
 					 app.addNewDevice();  
 				  });   
 				 
-				      
+				             
 			  });        
 		},
 		pageInitAbout:function(){
@@ -399,8 +406,51 @@ var app = {
 				this.pageInitList();
 				this.pageInitListDetail();    
 			}  
+			     
+		},    
+		loadMap:function(){
+			this.mapView.router.load({
+			    url: 'map.html',
+			    animatePages: false
+			});  
+		},
+		initMap:function(){     
+			app.iPickView.onPageInit('mapPage', function (page) {
+				 app.mapView.params.dynamicNavbar = true;
+				 
+				 $$("#mapTab").on('click',function(){
+				    app.renderMap();
+				 });   
+				
+			  });  
 			
-		},        
+		},
+		renderMap:function(){
+			if (!app.map){
+				if (!app.currentPosition){
+					app.getCurrentPosition();
+				}else{
+					
+					  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
+			          zoom: 11,
+			          center: {
+			        	  lat:app.currentPosition.Lat,
+			        	  lng:app.currentPosition.Long
+			          }
+					});
+					  
+					  google.maps.event.trigger(app.map, 'resize');
+				
+				}
+				
+			}else{
+				if (!app.mapJustResized){
+					app.mapJustResized = 1;  
+					google.maps.event.trigger(app.map, 'resize');
+				}
+			}
+			 
+		},
 	    loadHome:function(){
 			this.viewMain.router.load({
 			    url: 'home.html',
@@ -422,9 +472,9 @@ var app = {
 			  },4000);  
 			 
 			  
-			 /* app.intervalPosition = setInterval(function(){
+			  app.intervalPosition = setInterval(function(){
 				  app.getCurrentPosition();
-			  },15000); */      
+			  },15000);       
 		},      
 		  
 		stopStop:function(){
@@ -591,27 +641,29 @@ var app = {
            return false;
 		},
 		updateConnectionDeviceFound:function(device){
-			 for (var i=0;i<this.myDevices.length;i++){
-				 if (this.myDevices[i].address == device.address){
-					 if (!this.myDevices[i].lastUpdate || (this.myDevices[i].lastUpdate  && (Date.now() - this.myDevices[i].lastUpdate) > 10000)){
-				     this.myDevices[i].lastUpdate = Date.now();
-					 this.myDevices[i].connected = 'connected';
-				/*	app.db.transaction(function(tx){
-					  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,this.myDevices[i].id], 
-						 function(tx, results){  
-						}, app.errorCB);
-			    });*/ 
-			    }
+			 for (var i=0;i<app.myDevices.length;i++){
+				 if (app.myDevices[i].address == device.address){
+					 if (!app.myDevices[i].lastUpdate || (app.myDevices[i].lastUpdate  && (Date.now() - app.myDevices[i].lastUpdate) > 4000)){
+				     app.myDevices[i].lastUpdate = Date.now();
+					 app.myDevices[i].connected = 'connected';
+					 if (app.currentPosition){
+						 app.myDevices[i].lat = app.currentPosition.Lat;
+						 app.myDevices[i].long = app.currentPosition.Long;
+						 app.db.transaction(function(tx){
+						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,app.myDevices[i].id], 
+							 function(tx, results){  
+							}, app.errorCB);
+						   }); 
+					 }
+			    }   
 					break;
 		     }          
 		  }  
 	     
 		},   
-		initMap: function(){
-		},
 		updateConnectionDeviceNotFound:function(){ 
 			var timeConnectionToCheck;
-			if (app.atBackground){
+			if (app.atBackground){       
 				timeConnectionToCheck = 15000;
 			}else{  
 				timeConnectionToCheck = 7000;   
@@ -629,7 +681,7 @@ var app = {
 						 app.myDevices[dev].connected = 'notconnected';  
 					 }   
 					   
-				 }
+				 } 
 			 } 
 		},  
 		checkDeviceIfConnectedById: function(id){
@@ -641,7 +693,7 @@ var app = {
 				}  
 			 } 
 			return false;
-		},
+		},     
 		startScan: function(newDev)  
 		{ 
 		 
@@ -803,18 +855,16 @@ var app = {
 		},
 		
 		getCurrentPosition: function(){
-			  onMapSuccess, app.onMapError,{enableHighAccuracy: true}
+			navigator.geolocation.getCurrentPosition(
+			  app.onMapSuccess, app.onMapError,{enableHighAccuracy: true});
 		},
 	    onMapSuccess:function (position) {
-	    	/*app.db.transaction(function(tx){
-			  tx.executeSql('update devices set lat = ? , long = ? where id = ?', [position.coords.latitude,position.coords.longitude,idDevice], 
-				 function(tx, results){  
-				}, app.errorCB);
-	    });  */
 	    	app.currentPosition =  {	 
 		    'Lat': position.coords.latitude,
 		    'Long': position.coords.longitude
 	       };
+	    	
+	       app.renderMap();
 		},
 		onMapError:function(){
 			return '';
