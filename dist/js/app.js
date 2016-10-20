@@ -32,6 +32,7 @@ var app = {
 	    destinationType:'' ,
 	    currentPosition: null,
 	    t:0,
+	    markers:new Array(),
 	    mapJustResized:0,
 		deviceJustConnected:new Array(),  
 		deleteAllDevice:function(){
@@ -432,7 +433,7 @@ var app = {
 				}else{
 					
 					  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-			          zoom: 11,
+			          zoom: 15,
 			          center: {
 			        	  lat:app.currentPosition.Lat,
 			        	  lng:app.currentPosition.Long
@@ -440,6 +441,7 @@ var app = {
 					});
 					  
 					  google.maps.event.trigger(app.map, 'resize');
+					  app.setMarkerDevices();
 				
 				}
 				
@@ -448,8 +450,81 @@ var app = {
 					app.mapJustResized = 1;  
 					google.maps.event.trigger(app.map, 'resize');
 				}
+				
+				app.setMarkerDevices();
 			}
+			
+			
 			 
+		},
+		
+		setMarkerDevices:function(){
+            if (app.map){
+            	app.resetMarker();
+            	var j = 0;
+            	var infoWindowArray  =new Array();
+            	 for (var i=0;i<app.myDevices.length;i++){
+            		 
+            		if(app.myDevices[i].lat && app.myDevices[i].long ){
+        			  if (app.myDevices[i].connected == 'connected'){
+            			  var stringDevCon = '<div class="winMarkGree">Now Connected'+ 
+            				  '<span class="badge connected"></span>'+
+            				  '</div>';
+            		  }else{
+            			  var stringDevCon = '<div class="winMarkRed">Disconnected'+
+            			 '<span class="badge notconnected"></span>'+
+            			 '</div><div class="lastSeen"><b>Last Seen: '+app.getDate(app.myDevices[i].last_seen)+'</b></div>';
+            		  }
+            			
+        			  var contentString = '<div id="content">'+
+                      '<h1 id="firstHeading" >'+ app.myDevices[i].name +'</h1>'+
+                       stringDevCon+
+                      '</div>';
+        			  
+        			  var pos=new google.maps.LatLng(app.myDevices[i].lat+j, app.myDevices[i].long+j);
+        			  j = j+0.000009;     
+        			  var infowindow = new google.maps.InfoWindow({
+            	          content: contentString
+            	        });
+        			  infoWindowArray.push(infowindow);
+        			  var marker = new google.maps.Marker({  
+            		      position: pos,
+            		      map: app.map,
+            		      //icon: image,  
+            		      //shape: shape,
+            		    });
+        			  
+        			  
+        			  app.markers.push(marker);    
+        			  
+        				google.maps.event.addListener(marker,'click', function(map,marker,infowindow){ 
+        	             	  return function() {
+        	             	        infowindow.open(map,marker);
+        	             	   };    
+        	            }(app.map,marker,infowindow));  
+        			   
+        			   
+            		 }
+            	 }
+            	
+            }
+			
+		},    
+		getDate:function(timestamp){
+			var dataDaFormattare = new Date(timestamp);
+			var dataFormattata = dataDaFormattare.getDay()+'/'+dataDaFormattare.getMonth()+'/'+dataDaFormattare.getFullYear();
+			return dataFormattata;
+			
+		},
+		    
+		resetMarker:function(){
+			if (app.markers.length){
+				for (var i=0;i<app.markers.length;i++){
+					app.markers[i].setMap(null);
+				}
+				  
+			}
+			app.markers = new Array();   
 		},
 	    loadHome:function(){
 			this.viewMain.router.load({
@@ -474,8 +549,8 @@ var app = {
 			  
 			  app.intervalPosition = setInterval(function(){
 				  app.getCurrentPosition();
-			  },15000);       
-		},      
+			  },30000);       
+		},        
 		  
 		stopStop:function(){
 			app.updateConnectionDeviceNotFound();
@@ -641,22 +716,26 @@ var app = {
            return false;
 		},
 		updateConnectionDeviceFound:function(device){
+			var j = 0;
 			 for (var i=0;i<app.myDevices.length;i++){
 				 if (app.myDevices[i].address == device.address){
 					 if (!app.myDevices[i].lastUpdate || (app.myDevices[i].lastUpdate  && (Date.now() - app.myDevices[i].lastUpdate) > 4000)){
 				     app.myDevices[i].lastUpdate = Date.now();
 					 app.myDevices[i].connected = 'connected';
+					 
 					 if (app.currentPosition){
-						 app.myDevices[i].lat = app.currentPosition.Lat;
-						 app.myDevices[i].long = app.currentPosition.Long;
+						 var lat =  app.currentPosition.Lat+j;
+						 app.myDevices[i].lat = app.currentPosition.Lat ;
+						 app.myDevices[i].long = app.currentPosition.Long ;
+						
+						 var id = app.myDevices[i].id;
 						 app.db.transaction(function(tx){
-						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,app.myDevices[i].id], 
+						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,id], 
 							 function(tx, results){  
 							}, app.errorCB);
 						   }); 
-					 }
-			    }   
-					break;
+					 }      
+			    }      
 		     }          
 		  }  
 	     
@@ -928,7 +1007,6 @@ var app = {
 	    onToggleButton: function(address)
 		{
 			var device = app.devices[address];      
-			console.log("Suona");      
 			if (app.devicesRing[address]){
 				app.devicesRing[address] = 0;
 				var led = new Uint8Array([0]);          
