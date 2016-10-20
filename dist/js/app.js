@@ -176,6 +176,12 @@ var app = {
 							   app.numberReloadListPage = 0;
 						
 						    }
+						   break;
+						  
+						   case 'mapPage':{
+							   clearInterval(app.intervalPosition);
+						   }
+						   break;
 						}
 						   
 					}
@@ -418,46 +424,26 @@ var app = {
 		initMap:function(){     
 			app.iPickView.onPageInit('mapPage', function (page) {
 				 app.mapView.params.dynamicNavbar = true;
-				 
 				 $$("#mapTab").on('click',function(){
-				    app.renderMap();
-				 });   
+					 app.renderMap();
+				 });     
 				
 			  });  
 			
 		},
 		renderMap:function(){
 			if (!app.map){
-				if (!app.currentPosition){
+				if (!app.currentPosition){ 
 					app.getCurrentPosition();
-				}else{
-					
-					  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-			          zoom: 15,
-			          center: {
-			        	  lat:app.currentPosition.Lat,
-			        	  lng:app.currentPosition.Long
-			          }
-					});
-					  
-					  google.maps.event.trigger(app.map, 'resize');
-					  app.setMarkerDevices();
-				
 				}
-				
 			}else{
-				if (!app.mapJustResized){
-					app.mapJustResized = 1;  
-					google.maps.event.trigger(app.map, 'resize');
-				}
-				
-				app.setMarkerDevices();
+				setTimeout(app.resizeMap,1000);
 			}
-			
-			
-			 
+			   
 		},
-		
+		resizeMap:function(){
+			google.maps.event.trigger(app.map, 'resize');  
+		},
 		setMarkerDevices:function(){
             if (app.map){
             	app.resetMarker();
@@ -467,7 +453,7 @@ var app = {
             		 
             		if(app.myDevices[i].lat && app.myDevices[i].long ){
         			  if (app.myDevices[i].connected == 'connected'){
-            			  var stringDevCon = '<div class="winMarkGree">Now Connected'+ 
+            			  var stringDevCon = '<div class="winMarkGree">Now Connected &nbsp;&nbsp;&nbsp;&nbsp;'+ 
             				  '<span class="badge connected"></span>'+
             				  '</div>';
             		  }else{
@@ -492,7 +478,8 @@ var app = {
             		      map: app.map,
             		      //icon: image,  
             		      //shape: shape,
-            		    });
+            		    });    
+        			  
         			  
         			  
         			  app.markers.push(marker);    
@@ -546,12 +533,13 @@ var app = {
 				  app.updateConnectionDeviceNotFound();
 			  },4000);  
 			 
-			  
+			  app.intervalPositionFn(); 
+		},        
+		intervalPositionFn:function(){
 			  app.intervalPosition = setInterval(function(){
 				  app.getCurrentPosition();
 			  },30000);       
-		},        
-		  
+		},
 		stopStop:function(){
 			app.updateConnectionDeviceNotFound();
 			evothings.easyble.stopScan();  
@@ -942,8 +930,20 @@ var app = {
 		    'Lat': position.coords.latitude,
 		    'Long': position.coords.longitude
 	       };
+	    
+	    if (!app.map){
+    	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
+	          zoom: 15,
+	          center: {
+	        	  lat:app.currentPosition.Lat,
+	        	  lng:app.currentPosition.Long
+	          }
+			});
+	    }
+			app.setMarkerDevices();
 	    	
-	       app.renderMap();
+	    	
+	     //  app.renderMap();
 		},
 		onMapError:function(){
 			return '';
