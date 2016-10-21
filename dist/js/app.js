@@ -35,6 +35,8 @@ var app = {
 	    markers:new Array(),
 	    mapJustResized:0,
 		deviceJustConnected:new Array(),  
+		temporizzatoreCount: 0,
+		intervalTemporizzatore:0,
 		deleteAllDevice:function(){
 			localStorage.setItem('myDevices',null);
 		},
@@ -95,17 +97,18 @@ var app = {
 			}
 			
 			//var obj = {deviceAddress: {name:name}};
+			var idToSet = app.checkMaxId();  
 			var obj = {
-					id:myDev.length + 1,
+					id: idToSet + 1,//myDev.length + 1,
 					address:deviceAddress,  
 					name:name,
-					image:image,
+					image:image,     
 					list: [],
 					connected:'notconnected',
 					last_seen:Date.now()
 				
 			};
-			
+			  
 			myDev.push(obj); 
 			app.myDevices = myDev;
 			
@@ -114,7 +117,16 @@ var app = {
 					 function(tx, results){  
 					}, app.errorCB);
 		    });  
-		},    
+		},      
+		checkMaxId: function(){
+			var max  = -1;
+			for (var i = 0;i<app.myDevices.length;i++){
+				if (app.myDevices[i].id > max){
+					max = app.myDevices[i].id;
+				}
+			}
+			return max;
+		},
 		deleteAllFromDb:function(){
 			  this.db.transaction(function(tx){
 				  tx.executeSql('delete from devices', [],   
@@ -161,6 +173,7 @@ var app = {
 						   case 'about':
 						   {  
 							   var dev = app.devices[page.query.address];
+							   clearInterval(app.intervalAbout);
 							   if (!$.isEmptyObject(dev)){
 								   dev.close();  
 							   }
@@ -169,6 +182,8 @@ var app = {
 						   break;
 						   case 'newDevice':{
 								$$("#toolbar_id").show();     
+								app.stopStop();
+								app.scanHome();    
 						   }
 						   break;
 						   case 'listDetailPage':{
@@ -217,9 +232,8 @@ var app = {
 				this.db =  window.openDatabase("DatabasePick", "1.0", "Pick", 200000);
 				this.db.transaction(this.populateDB, this.errorCB);
 				//this.db.transaction(this.dropTables, this.errorCB);
-				//return;  
 				this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome);     
-			  
+			    
 		},    
 		successCB:function(){  
 			 app.db.transaction(app.queryDB, app.errorCB);    
@@ -228,9 +242,8 @@ var app = {
 			  tx.executeSql('SELECT * FROM devices', [], app.querySuccess, app.errorCB);
 		},
 		querySuccess:function(tx, results){
-			console.log(JSON.stringify(results.rows.item));  
 		
-		},
+		},  
 		errorCB:function(err) {
 	        console.log("Error processing SQL: "+JSON.stringify(err));
 	    },
@@ -251,19 +264,54 @@ var app = {
 				  $$("#add_deviceId").on('click',function(){  
 					 app.addNewDevice();  
 				  });   
+				  
+                  /**
+                   * devo bloccare momentaneamente l'aggiornamento della home altrimenti
+                   * mi fa sparire il "delete", lo ripristino in chiusura
+                   */				  
+				  $$('.swipeout').on('open', function (e) {
+					  var idDevice = $$(this).attr('idDevice');
+					 clearInterval(app.intervalHome);
+				   });  
+				    
+				  $$('.swipeout').on('closed', function (e) {
+					  app.scanHome();
+				   });    
+				  
+				   $$('.swipeout').on('deleted', function (e) {
+					var idDevice = $$(this).attr('idDevice')*1;
+					app.db.transaction(
+					       function(tx){
+					    	   console.log(idDevice);
+					    	   app.deleteDevice(tx,idDevice)
+					    	   for (var i=0;i<app.myDevices.length;i++){
+					    		   if (app.myDevices[i].id == idDevice){
+					    			   app.myDevices.splice(i, 1);
+					    			   break;
+					    		   }         
+					    	   }
+					    	},
+					    	this.errorCB);
+					app.scanHome();
+					
+				   });   
 				 
 				             
 			  });        
+		},
+		deleteDevice: function(tx,idDevice){
+			   tx.executeSql('delete from DEVICES where id = ? ',[idDevice]),
+		       tx.executeSql('delete from DEVICEINLIST where iddevice = ? ',[idDevice]) 
 		},
 		pageInitAbout:function(){
 			  
 			 app.iPickView.onPageInit('about', function (page) {
 				 app.iPickView.showPreloader();
 				 app.viewMain.params.dynamicNavbar = true;
-				 clearInterval(app.intervalHome);
+				 clearInterval(app.intervalHome);  
 				 var addressItrackSelected = page.query.address;
 				 app.connectToDevice(addressItrackSelected);
-				 
+				  
 				 app.intervalAbout = setInterval(function(ciccio){
 					 var device  = app.devices[addressItrackSelected];  
 					 
@@ -271,12 +319,31 @@ var app = {
 					   function(rssi){
 						   if (rssi<= 0){
 							   	var rssiPerc = app.calculateRssiPerc(rssi); 
-						   
+							   	$$(".row").children('div').removeClass('col-100-big');
+							   	$$(".row").children('div').children('div').removeClass('antenna-big');
+							   	var antenna = 1;
+							   	if (rssiPerc<=10){
+							   		antenna = 1;
+							   	}
+							   	else if (rssiPerc<=30){
+							   		antenna = 2;
+							   	}
+							   	else if(rssiPerc<=40){
+							   		antenna = 3;
+							   	}
+							   	else if (rssiPerc <= 50){
+							   		antenna = 4;  
+							   	}
+							   	else{
+							   		antenna = 5;  
+							   	}
+							   	$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
+							   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
 						   }
 						 
 					 },
 					 function(fail){
-						 console.log("fallito");
+						 
 					 });
 					 
 					 
@@ -497,7 +564,7 @@ var app = {
             		      //shape: shape,
             		    });    
         			  
-        			  
+        			    
         			  
         			  app.markers.push(marker);    
         			  
@@ -549,7 +616,7 @@ var app = {
 					    reload:true     
 					});         
 				  app.updateConnectionDeviceNotFound();
-			  },4000);  
+			  },6000);  
 			 
 			  app.intervalPositionFn(); 
 		},        
@@ -579,15 +646,23 @@ var app = {
 			}); 
 			           
 			//this.stopStop();  
-		    //this.startScan(true);     
-			setTimeout(function(){
-				app.stopStop();
- 				app.startScan(true); 
-				//$$("#toolbar_id").show();   
-				//app.viewMain.showNavbar();  
-			 }, 3000);      
+		    //this.startScan(true);
+			app.temporizzatoreCount = 0;
+			
+			app.startScan(true); 
+			
+			app.intervalTemporizzatore = setInterval(app.temporizzatore, 1000);      
 		},
-		
+		temporizzatore:function(){
+			if (app.temporizzatoreCount==2){
+				app.stopStop();    
+			}
+			else if (app.temporizzatoreCount == 5){
+				app.startScan(true); 
+				app.temporizzatoreCount = -1;
+			}
+			app.temporizzatoreCount++;
+		},
 		addNewList: function(){
 			this.listView.router.load({
 			    url: 'newList.html',
@@ -835,7 +910,6 @@ var app = {
 					{       
 						app.showInfo('Status: Connected');
 					    app.readServices(device,newDev);
-				
 					},  
 					function(errorCode)   
 					{
@@ -897,9 +971,10 @@ var app = {
 			      if (paringMode == 1){     
 			    	  
 			    	   app.stopStop();
+			    	   clearInterval(app.intervalTemporizzatore);
 			    	   app.chooseOptionsNewDevice(device);        
-			    	   
-			      }else{         
+			    	     
+			      }else{             
 			    	  device.close();  
 			    	  //app.stopStop();               
 			      }
@@ -915,8 +990,8 @@ var app = {
 		
 		chooseOptionsNewDevice: function(device){
 			//$.mobile.changePage("#optionNewDevice",{transition: "slide",  allowSamePageTransition: true,reloadPage: false });  
-			this.stopStop();
-			this.viewMain.router.load({   
+			app.stopStop();
+			app.viewMain.router.load({   
 			    url: 'newDeviceOption.html',
 			    animatePages: true      
 			});  
@@ -958,7 +1033,7 @@ var app = {
 	    
 	    if (!app.map){
     	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-	          zoom: 18,
+	          zoom: 16,
 	          center: {
 	        	  lat:app.currentPosition.Lat,
 	        	  lng:app.currentPosition.Long
@@ -1076,3 +1151,4 @@ document.addEventListener('resume', function(){
    
         
  
+    
