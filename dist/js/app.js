@@ -49,12 +49,12 @@ var app = {
 		getMyDevice:function(callback,callback2){
 		  // this.myDevices = JSON.parse(localStorage.getItem('myDevices'));
 		  this.db.transaction(function(tx){
-			  tx.executeSql('SELECT id, name, address , connected ,long, lat, image FROM devices', [], 
+			  tx.executeSql('SELECT id, name, last_seen, address , connected ,long, lat, image FROM devices', [], 
 				 function(tx, results){    
 				           var len=results.rows.length;
 						   if (!len){
 							   app.myDevices = [];  
-						   }else{
+						   }else{ 
 							   var resultQuery = [];
 							   for (var i=0;i<len;i++){
 								   resultQuery.push(results.rows.item(i));
@@ -178,10 +178,7 @@ var app = {
 						    }
 						   break;
 						  
-						   case 'mapPage':{
-							   clearInterval(app.intervalPosition);
-						   }
-						   break;
+					 
 						}
 						   
 					}
@@ -266,6 +263,26 @@ var app = {
 				 clearInterval(app.intervalHome);
 				 var addressItrackSelected = page.query.address;
 				 app.connectToDevice(addressItrackSelected);
+				 
+				 app.intervalAbout = setInterval(function(ciccio){
+					 var device  = app.devices[addressItrackSelected];  
+					 
+					 device.readRSSI(    
+					   function(rssi){
+						   if (rssi<= 0){
+							   	var rssiPerc = app.calculateRssiPerc(rssi); 
+						   
+						   }
+						 
+					 },
+					 function(fail){
+						 console.log("fallito");
+					 });
+					 
+					 
+					 
+				 },5000,"ciao");  
+				 
 				 $$("#bell_ring").on('click',function(){
 					 app.onToggleButton(addressItrackSelected);  
 				 });
@@ -457,7 +474,7 @@ var app = {
             				  '<span class="badge connected"></span>'+
             				  '</div>';
             		  }else{
-            			  var stringDevCon = '<div class="winMarkRed">Disconnected'+
+            			  var stringDevCon = '<div class="winMarkRed">Disconnected &nbsp;&nbsp;&nbsp;&nbsp;'+
             			 '<span class="badge notconnected"></span>'+
             			 '</div><div class="lastSeen"><b>Last Seen: '+app.getDate(app.myDevices[i].last_seen)+'</b></div>';
             		  }
@@ -499,7 +516,8 @@ var app = {
 		},    
 		getDate:function(timestamp){
 			var dataDaFormattare = new Date(timestamp);
-			var dataFormattata = dataDaFormattare.getDay()+'/'+dataDaFormattare.getMonth()+'/'+dataDaFormattare.getFullYear();
+			     
+			var dataFormattata = dataDaFormattare.getDate()+'/'+(dataDaFormattare.getMonth()+1)+'/'+dataDaFormattare.getFullYear();
 			return dataFormattata;
 			
 		},
@@ -538,7 +556,7 @@ var app = {
 		intervalPositionFn:function(){
 			  app.intervalPosition = setInterval(function(){
 				  app.getCurrentPosition();
-			  },30000);       
+			  },15000);       
 		},
 		stopStop:function(){
 			app.updateConnectionDeviceNotFound();
@@ -710,12 +728,14 @@ var app = {
 					 if (!app.myDevices[i].lastUpdate || (app.myDevices[i].lastUpdate  && (Date.now() - app.myDevices[i].lastUpdate) > 4000)){
 				     app.myDevices[i].lastUpdate = Date.now();
 					 app.myDevices[i].connected = 'connected';
-					 
-					 if (app.currentPosition){
+					 if (app.currentPosition){   
 						 var lat =  app.currentPosition.Lat+j;
 						 app.myDevices[i].lat = app.currentPosition.Lat ;
 						 app.myDevices[i].long = app.currentPosition.Long ;
-						
+						 if (device.rssi <= 0){
+							
+							 app.myDevices[i].rssi = app.calculateRssiPerc(device.rssi);
+						 }  
 						 var id = app.myDevices[i].id;
 						 app.db.transaction(function(tx){
 						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,id], 
@@ -728,6 +748,13 @@ var app = {
 		  }  
 	     
 		},   
+		calculateRssiPerc:function(rssi){
+			 var rssiWidth = 100;  // Used when RSSI is zero or greater.
+			 if (rssi < -100) { rssiWidth = 0; }
+			 else if (rssi < 0) { rssiWidth = 100 + rssi; }
+			 
+			 return rssiWidth;
+		},
 		updateConnectionDeviceNotFound:function(){ 
 			var timeConnectionToCheck;
 			if (app.atBackground){       
@@ -799,8 +826,6 @@ var app = {
 		 */
 		connectToDevice:function(deviceAddress,newDev)      
 		{
-			app.showInfo('Status: Connecting device:'+ deviceAddress );
-			
 			var device  = app.devices[deviceAddress];   
 			if (!$.isEmptyObject(device)){
 				//evothings.easyble.stopScan();
@@ -933,7 +958,7 @@ var app = {
 	    
 	    if (!app.map){
     	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-	          zoom: 15,
+	          zoom: 18,
 	          center: {
 	        	  lat:app.currentPosition.Lat,
 	        	  lng:app.currentPosition.Long
