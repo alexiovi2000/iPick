@@ -103,8 +103,8 @@
 			
 		</div>
 		
-	   <div id="mapView" class="view view-main tab">
-            <div class="navbar navbar-custom" id="NavigationTabHome">
+	   <div id="mapView" class="view view-map tab">
+            <div class="navbar navbar-custom" id="NavigationTabMap">
 				<div class="navbar-inner">
 					<div class="left">
 						<a href="#" class="link icon-only open-panel"> <i
@@ -124,7 +124,7 @@
 				<a href="#listView" id="listTab" class="tab-link"><span class="tabbar-label">Lists</span>
 				</a> <a href="#homeView" class="tab-link active"> <span
 					class="tabbar-label">Home</span>
-				</a> <a href="#mapView" class="tab-link"> <span
+				</a> <a href="#mapView" class="tab-link" id="mapTab"> <span
 					class="tabbar-label">Maps</span>
 				</a>
 			</div>
@@ -162,9 +162,11 @@
 </script>
 <script type="text/javascript" src="dist/js/framework7.min.js"></script>  
 
-<!--	<script type="text/javascript" src="dist/js/my-app.js"></script> -->  
+<!--	<script type="text/javascript" src="dist/js/my-app.js"></script> -->      
 <script src="libs/evothings/easyble/easyble.dist.js"></script>           
-<script type="text/javascript" src="dist/js/app.js"></script>        
-<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBf3Y04zoL9Ol86M-tSQ3rwezjn314ioX8" async defer></script>   
+<script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBf3Y04zoL9Ol86M-tSQ3rwezjn314ioX8" async defer></script>
+<script type="text/javascript" src="dist/js/app.js"></script>                
+
 </body>
 </html>

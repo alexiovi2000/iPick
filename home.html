@@ -3,8 +3,8 @@
 	<div class="list-block list-block-custom">
 		<ul>
 		{{#each this.devices}}
-			<li><a href="about.html?item={{this.name}}&address={{this.address}}"
-				class="item-link item-content item-content-custom">
+			<li class="swipeout" idDevice={{this.id}}><a href="about.html?item={{this.name}}&address={{this.address}}"
+				class="swipeout-content item-link item-content item-content-custom">
 					<div class="item-media">
 						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
 					</div>
@@ -17,7 +17,12 @@
 							{{/each}}
 						</div>
 					</div>
-			</a></li>
+			</a>
+			<div class="swipeout-actions-right">
+   					 <!-- Add this button and item will be deleted automatically -->
+   				 <a href="#" class="swipeout-delete">Delete</a>
+ 		    </div>
+			</li>   
 	    {{/each}}  
 		</ul>
 	</div>
