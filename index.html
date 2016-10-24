@@ -64,7 +64,7 @@
     <!--     PAGE HOME       -->
 
 		<div id="homeView" class="view view-main tab active">
-            <div class="navbar navbar-custom" id="NavigationTabHome">
+             <div class="navbar navbar-custom" id="NavigationTabHome">
 				<div class="navbar-inner">
 					<div class="left">
 						<a href="#" class="link icon-only open-panel"> <i
@@ -72,9 +72,9 @@
 					</div>
 					<div class="center sliding"><img class="img-custom" src="dist/img/PIK_azzurro_small.png"></div>
 					<div class="right">
-						<a href="#" class="link icon-only" id="add_deviceId">+</a>
+						<a href="#" class="link icon-only" id="add_deviceId" onclick="alert('ciao');">+</a>
 					</div>
-				</div>
+				</div>          
           </div>  
             <div class="pages navbar-through" >
            
@@ -156,6 +156,8 @@
 	</div>
  </div>
 </script>  
+
+
 <script>  
 	// Redirect console.log to Evothings Workbench.
 	if (window.hyper && window.hyper.log) { console.log = hyper.log }   

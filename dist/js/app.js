@@ -4,7 +4,8 @@ var $$ = Dom7;
 
 var i=false;
      
-  
+
+
   
 var app = {
 		timeStartScanNewDev:'',
@@ -24,6 +25,7 @@ var app = {
 		atBackground:'',
 		newDeviceFoto:{},     
 		newListFoto:{},
+		updateDeviceFoto:{},
 		deviceSelected:{},  
 		deviceInList:[],
 		pictureSource: '' ,  
@@ -37,6 +39,26 @@ var app = {
 		deviceJustConnected:new Array(),  
 		temporizzatoreCount: 0,
 		intervalTemporizzatore:0,
+		logoInBase64:'',
+	    toDataUrl:function(src, callback, outputFormat) {
+			  var img = new Image();
+			  img.crossOrigin = 'Anonymous';
+			  img.onload = function() {
+			    var canvas = document.createElement('CANVAS');
+			    var ctx = canvas.getContext('2d');
+			    var dataURL;    
+			    canvas.height = this.height;
+			    canvas.width = this.width;
+			    ctx.drawImage(this, 0, 0);
+			    dataURL = canvas.toDataURL(outputFormat);
+			    callback(dataURL);  
+			  };
+			  img.src = src;
+			  if (img.complete || img.complete === undefined) {
+			    img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+			    img.src = src;
+			  }
+		},
 		deleteAllDevice:function(){
 			localStorage.setItem('myDevices',null);
 		},
@@ -155,15 +177,22 @@ var app = {
 			  }, app.errorCB);    
 		},
 		loadFrameworkAndHome:function(){
+			
+			app.toDataUrl('dist/img/PIK_azzurro_small.png', function(base64Img) {
+				 app.logoInBase64 = base64Img; 
+				});
+		           
+			
+			
 			  app.iPickView = new Framework7({  
 					template7Pages: true,      
 					precompileTemplates: true,   
-					allowDuplicateUrls:true,
+					allowDuplicateUrls:true,    
 					onAjaxStart:function(){
-						//myApp.showPreloader();
+						app.iPickView.showPreloader();
 					},    
 					onAjaxComplete:function(){
-						//myApp.hidePreloader();    
+						app.iPickView.hidePreloader();    
 					},  
 					template7Data : {
 						'devices' : {'devices':app.myDevices,'lists':app.myLists,'deviceinlist':app.deviceInList}
@@ -174,7 +203,7 @@ var app = {
 						   {  
 							   var dev = app.devices[page.query.address];
 							   clearInterval(app.intervalAbout);
-							   if (!$.isEmptyObject(dev)){
+							   if (!$.isEmptyObject(dev)){    
 								   dev.close();  
 							   }
 							   app.scanHome();             
@@ -192,7 +221,12 @@ var app = {
 						
 						    }
 						   break;
-						  
+						   case 'newDeviceOption':{
+							   
+							   clearInterval(app.intervalTemporizzatore);
+							   
+						   }
+						   break;
 					 
 						}
 						   
@@ -201,10 +235,16 @@ var app = {
 
 				});
 			  
-				  app.listView = app.iPickView.addView('.view-list',{});  
-				  app.viewMain = app.iPickView.addView('.view-main', {});
-				  app.mapView  = app.iPickView.addView('.view-map',{});
-				  
+				  app.listView = app.iPickView.addView('.view-list',{
+					  dynamicNavbar:true
+				  });  
+				  app.viewMain = app.iPickView.addView('.view-main', {
+					  dynamicNavbar:true
+				  });  
+				  app.mapView  = app.iPickView.addView('.view-map',{
+					  dynamicNavbar:true
+				  });
+				        
 				  
 				 if (!app.myDevices.length){       
 						//app.showMyDevice();      
@@ -220,6 +260,7 @@ var app = {
 				  app.initMap();
 				  app.pageInitHome();
 				  app.pageInitAbout();   
+				  app.pageDeviceOption();
 		},
 		initialize:function(){      
 			   // this.deleteAllDevice();    
@@ -234,7 +275,7 @@ var app = {
 				//this.db.transaction(this.dropTables, this.errorCB);
 				this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome);     
 			    
-		},    
+		},   
 		successCB:function(){  
 			 app.db.transaction(app.queryDB, app.errorCB);    
 		},      
@@ -260,11 +301,8 @@ var app = {
 		pageInitHome:function(){
 			
 			  app.iPickView.onPageInit('home', function (page) {
-				  app.viewMain.params.dynamicNavbar = true;
-				  $$("#add_deviceId").on('click',function(){  
-					 app.addNewDevice();  
-				  });   
-				  
+				 // app.viewMain.params.dynamicNavbar = true;
+				       
                   /**
                    * devo bloccare momentaneamente l'aggiornamento della home altrimenti
                    * mi fa sparire il "delete", lo ripristino in chiusura
@@ -282,7 +320,6 @@ var app = {
 					var idDevice = $$(this).attr('idDevice')*1;
 					app.db.transaction(
 					       function(tx){
-					    	   console.log(idDevice);
 					    	   app.deleteDevice(tx,idDevice)
 					    	   for (var i=0;i<app.myDevices.length;i++){
 					    		   if (app.myDevices[i].id == idDevice){
@@ -307,37 +344,37 @@ var app = {
 			  
 			 app.iPickView.onPageInit('about', function (page) {
 				 app.iPickView.showPreloader();
-				 app.viewMain.params.dynamicNavbar = true;
+				// app.viewMain.params.dynamicNavbar = true;
 				 clearInterval(app.intervalHome);  
 				 var addressItrackSelected = page.query.address;
 				 app.connectToDevice(addressItrackSelected);
 				  
 				 app.intervalAbout = setInterval(function(ciccio){
 					 var device  = app.devices[addressItrackSelected];  
-					 
+					   
 					 device.readRSSI(    
 					   function(rssi){
 						   if (rssi<= 0){
-							   	var rssiPerc = app.calculateRssiPerc(rssi); 
+							   	var rssiDist = app.calculateRssiDist(rssi); 
 							   	$$(".row").children('div').removeClass('col-100-big');
 							   	$$(".row").children('div').children('div').removeClass('antenna-big');
 							   	var antenna = 1;
-							   	if (rssiPerc<=10){
-							   		antenna = 1;
+							   	if (rssiDist<=300){
+							   		antenna = 5;
+							   	}    
+							   	else if (rssiDist<=2000){
+							   		antenna = 4;
 							   	}
-							   	else if (rssiPerc<=30){
-							   		antenna = 2;
+							   	else if(rssiDist<=5000){
+							   		antenna = 3;   
 							   	}
-							   	else if(rssiPerc<=40){
-							   		antenna = 3;
+							   	else if (rssiDist <= 10000){
+							   		antenna = 2;  
 							   	}
-							   	else if (rssiPerc <= 50){
-							   		antenna = 4;  
-							   	}
-							   	else{
-							   		antenna = 5;  
-							   	}
-							   	$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
+							   	else{    
+							   		antenna = 1;  
+							   	}  
+							   //	$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
 							   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
 						   }
 						 
@@ -355,6 +392,43 @@ var app = {
 				 });
 			  });
 		},   
+		pageDeviceOption: function(){
+			
+			 app.iPickView.onPageInit('DeviceOption', function (page) {
+				// app.viewMain.params.dynamicNavbar = true;
+				 for (var i=0;i<app.myDevices.length;i++){
+					 if (app.myDevices[i].id == page.query.id){
+						 var image = document.getElementById('largeImageDeviceOption');    
+				    	 image.src =  "data:image/jpeg;base64,"+app.myDevices[i].image;  
+				    	 break;
+					 }
+  				 }
+				 
+				 
+				 $$('#btn_photoid').on('click', function () {
+					  app.iPickView.pickerModal('.picker-info');
+					});
+				
+				$$('#cancelPicker_btn').on('click', function () {
+					app.iPickView.closeModal('.picker-info');
+				}); 
+				
+				
+				$$("#takephoto_btn").on('click',function(){
+				   app.iPickView.closeModal('.picker-info');
+				   app.openCamera('camera-thmb','largeImageDeviceOption',device,app.setUpdateDeviceFoto);	  
+				
+				});
+				
+				$$("#updateDevice").on('click',function(){
+					//if($$("#namePick_id").val() && app.newDeviceFoto){
+						app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto);
+						window.location='index.html';                      
+				});  
+				 
+				 
+			 });
+		},
 		pageInitList:function(){   
 			 app.iPickView.onPageInit('listPage', function (page) {
 				
@@ -364,7 +438,7 @@ var app = {
 				 });
 				 
 				 
-				 app.listView.params.dynamicNavbar = true;
+				 //app.listView.params.dynamicNavbar = true;
 
 				 $$("#add_listId").on('click',function(){
 					  app.addNewList();   
@@ -413,7 +487,7 @@ var app = {
 				 
 				 app.iPickView.showPreloader();
 				 //svuoto contenuto
-				 app.listView.params.dynamicNavbar = true;
+				 //app.listView.params.dynamicNavbar = true;
 				 $$('.open-picker').on('click', function () {
 					  app.iPickView.pickerModal('.picker-1');
 					  $$("#toolbar_id").hide();      
@@ -507,7 +581,7 @@ var app = {
 		},
 		initMap:function(){     
 			app.iPickView.onPageInit('mapPage', function (page) {
-				 app.mapView.params.dynamicNavbar = true;
+				 //app.mapView.params.dynamicNavbar = true;
 				 $$("#mapTab").on('click',function(){
 					 app.renderMap();
 				 });     
@@ -614,10 +688,12 @@ var app = {
 					    contextName:'devices',   
 					    animatePages: false,
 					    reload:true     
-					});         
+					});            
+				   $$("#logoPick").prop("src",app.logoInBase64);
+				 // app.viewMain.showNavbar();
 				  app.updateConnectionDeviceNotFound();
-			  },6000);  
-			 
+			  },6000);      
+			      
 			  app.intervalPositionFn(); 
 		},        
 		intervalPositionFn:function(){
@@ -628,7 +704,7 @@ var app = {
 		stopStop:function(){
 			app.updateConnectionDeviceNotFound();
 			evothings.easyble.stopScan();  
-			this.disconnectToDevice();  
+			app.disconnectToDevice();  
 		},       
 		    
 		addNewDevice:function (){
@@ -648,22 +724,22 @@ var app = {
 			//this.stopStop();  
 		    //this.startScan(true);
 			app.temporizzatoreCount = 0;
-			
-			app.startScan(true); 
+			    
+			//app.startScan(true); 
 			
 			app.intervalTemporizzatore = setInterval(app.temporizzatore, 1000);      
 		},
 		temporizzatore:function(){
-			if (app.temporizzatoreCount==2){
-				app.stopStop();    
+			if (app.temporizzatoreCount==4){
+				app.startScan(true);    
 			}
 			else if (app.temporizzatoreCount == 5){
-				app.startScan(true); 
+				app.stopStop(); 
 				app.temporizzatoreCount = -1;
 			}
 			app.temporizzatoreCount++;
 		},
-		addNewList: function(){
+		addNewList: function(){  
 			this.listView.router.load({
 			    url: 'newList.html',
 			    animatePages: true      
@@ -788,6 +864,9 @@ var app = {
 		setFotoNewList:function(imageData){
 			app.newListFoto = imageData;
 		},
+		setUpdateDeviceFoto:function(imageData){
+			app.updateDeviceFoto = imageData;
+		},
 		isMyDevice:function(address){
            for (var t in app.myDevices){
         	   if (app.myDevices[t].address == address){
@@ -809,13 +888,13 @@ var app = {
 						 app.myDevices[i].long = app.currentPosition.Long ;
 						 if (device.rssi <= 0){
 							
-							 app.myDevices[i].rssi = app.calculateRssiPerc(device.rssi);
+							 app.myDevices[i].rssi = app.calculateRssiDist(device.rssi);
 						 }  
 						 var id = app.myDevices[i].id;
 						 app.db.transaction(function(tx){
 						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,id], 
 							 function(tx, results){  
-							}, app.errorCB);
+							}, app.errorCB);  
 						   }); 
 					 }      
 			    }      
@@ -823,12 +902,20 @@ var app = {
 		  }  
 	     
 		},   
-		calculateRssiPerc:function(rssi){
-			 var rssiWidth = 100;  // Used when RSSI is zero or greater.
-			 if (rssi < -100) { rssiWidth = 0; }
-			 else if (rssi < 0) { rssiWidth = 100 + rssi; }
-			 
-			 return rssiWidth;
+		calculateRssiDist:function(rssi){
+			
+			 /*
+			  * d = 10 ^ ((TxPower - RSSI) / 20)
+			  * 
+			  * TxPower = 4;
+			  * 
+			  * 
+			  */
+			var diff = (4 - rssi)/20;
+			var dist = Math.pow(10,diff);
+			
+			
+			 return dist;
 		},
 		updateConnectionDeviceNotFound:function(){ 
 			var timeConnectionToCheck;
@@ -895,7 +982,7 @@ var app = {
 		},
 		disconnectToDevice:function(){
 			evothings.easyble.closeConnectedDevices();
-		},
+		},  
 		/**
 		 * Read services for a device.
 		 */
@@ -998,7 +1085,7 @@ var app = {
 			
 			app.iPickView.onPageInit('newDeviceOption', function (page) {
 				
-				$$('#btn_photoid').on('click', function () {
+				$$('#btn_photoid').on('click', function () {  
 					  app.iPickView.pickerModal('.picker-info');
 					});
 				
@@ -1033,7 +1120,7 @@ var app = {
 	    
 	    if (!app.map){
     	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-	          zoom: 16,
+	          zoom: 15,
 	          center: {
 	        	  lat:app.currentPosition.Lat,
 	        	  lng:app.currentPosition.Long
@@ -1053,6 +1140,14 @@ var app = {
 		 // app.initialize();
 		
 		},
+		updateDevice:function(id,name,image){
+			var idDevice = id*1;    
+		    app.db.transaction(function(tx){
+				  tx.executeSql('update devices set name = ? ,image = ? where id = ?', [name,image,idDevice],   
+					 function(tx, results){  
+					}, app.errorCB);
+		    });    
+		},   
 		saveNewList:function(nameList,color){
 			app.setMyList(nameList,color);
 		},
@@ -1061,7 +1156,7 @@ var app = {
 			device.enableServiceNotification(
 			  '0000ffe0-0000-1000-8000-00805f9b34fb',
 			  '0000ffe1-0000-1000-8000-00805f9b34fb',
-			  function(data)
+			  function(data)  
 			  {  
 			    var res = new Uint8Array(data)[0];
 			  },
@@ -1132,7 +1227,7 @@ var app = {
 		showInfo:function(t){
 			console.log(t);
 		}
-			
+			   
 };  
 document.addEventListener('deviceready', function(){
 	app.initialize();       

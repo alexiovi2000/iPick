@@ -260,7 +260,13 @@
 	height:50%;  
 	margin-bottom:15px;           
 }
-
+#largeImageDeviceOption{
+	display: block;
+    margin: 0 auto;
+	width:50%;
+	height:50%;  
+	margin-bottom:15px;           
+}
 .redColor {
 	background: #c00; 
 	height: 50px;
@@ -326,8 +332,9 @@
 }
 .col-100-big{
 	height:10%;
-	 margin-top: 2%;
+	margin-top: 2%;
 }
+
 .content-block-single{
 	height:75%;
 }
@@ -342,4 +349,9 @@ content-block-map{
 #mapDiv{
 	width:100%;
 	height:95%;    
+}
+#logoPick{
+	background-image: url("/dist/img/PIK_azzurro_small.png");
+    height:100%;
+
 }
