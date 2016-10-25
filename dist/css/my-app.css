@@ -42,6 +42,19 @@
 	width: 40px;
 	
 }
+.red{
+    background-color:  #ff0000;
+    box-sizing: border-box;
+    color: #fff;
+    display: block;
+    font-size: 13px;
+    height: 15px;
+    line-height: 20px;
+    padding: 0 6px;
+    text-align: center;
+	width: 40px;  
+	
+}
 .fucsia{
 	/*background-color: rgba(0,255,0,0.6);*/
 	background-color: #ff2968;

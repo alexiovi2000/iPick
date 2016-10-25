@@ -73,24 +73,28 @@ var app = {
 		getMyDevice:function(callback,callback2){
 		  // this.myDevices = JSON.parse(localStorage.getItem('myDevices'));
 		  this.db.transaction(function(tx){
-			  tx.executeSql('SELECT id, name, last_seen, address , connected ,long, lat, image FROM devices', [], 
+			  tx.executeSql("SELECT d.id, d.name, d.last_seen, d.address , d.connected ,d.long, d.lat ,d.image, GROUP_CONCAT(li.color) as list  FROM devices d left join deviceinlist "+
+					  "l on (d.id = l.iddevice) left join lists li on (li.id = l.idlist ) group by d.address", [], 
 				 function(tx, results){    
-				           var len=results.rows.length;
-						   if (!len){
-							   app.myDevices = [];  
-						   }else{ 
+				           var len=results.rows.length;  
+						   if (!len){  
+							   app.myDevices = [];     
+						   }else{    
 							   var resultQuery = [];
 							   for (var i=0;i<len;i++){
-								   resultQuery.push(results.rows.item(i));
-							   }  
+									   resultQuery.push(results.rows.item(i));
+							   }       
 							   app.myDevices = JSON.parse(JSON.stringify(resultQuery));
+							   for (var i=0;i<app.myDevices.length;i++){
+								   app.myDevices[i].list = app.myDevices[i].list.split(",");
+							   }   
 						   }
 						   callback(callback2);    
 						  
-				}, app.errorCB);
+				}, app.errorCB);   
 		  }, app.errorCB);    
 		},
-		
+		   
 		getMyLists: function(callback){
 			  app.db.transaction(function(tx){
 				  tx.executeSql('SELECT id, name,image,color FROM lists', [], 
@@ -349,7 +353,7 @@ var app = {
 				 var addressItrackSelected = page.query.address;
 				 app.connectToDevice(addressItrackSelected);
 				  
-				 app.intervalAbout = setInterval(function(ciccio){
+				 app.intervalAbout = setInterval(function(){
 					 var device  = app.devices[addressItrackSelected];  
 					   
 					 device.readRSSI(    
@@ -385,7 +389,7 @@ var app = {
 					 
 					 
 					 
-				 },5000,"ciao");  
+				 },5000);  
 				 
 				 $$("#bell_ring").on('click',function(){
 					 app.onToggleButton(addressItrackSelected);  
@@ -484,7 +488,6 @@ var app = {
 		},  
 		pageInitListDetail:function(){
 			 app.iPickView.onPageInit('listDetailPage', function (page) {
-				 
 				 app.iPickView.showPreloader();
 				 //svuoto contenuto
 				 //app.listView.params.dynamicNavbar = true;
@@ -509,7 +512,14 @@ var app = {
 						    tx.executeSql('insert into deviceinlist (idlist,iddevice) values (?,?)', [parseInt(page.query.id),elClicked], 
 							 function(tx, results){
 						    	app.numberReloadListPage = 0;
-						    	app.reloadListDetail(page.query.title,page.query.id,true);
+						    	
+						    	for(var i=0;i<app.myDevices.length;i++){
+						    		if (app.myDevices[i].id == elClicked){
+						    			app.myDevices[i].list.push(page.query.color);
+						    		}
+						    	}         
+						    	
+						    	app.reloadListDetail(page.query.title,page.query.id,page.query.color,true);
 						    }, app.errorCB);  
 					  }, app.errorCB);   
 				});    
@@ -527,7 +537,7 @@ var app = {
 						   }  
 						   app.deviceInList = JSON.parse(JSON.stringify(resultQuery));
 						   app.iPickView.template7Data.devices.deviceinlist = app.deviceInList;
-				           app.reloadListDetail(page.query.title,page.query.id);  
+				           app.reloadListDetail(page.query.title,page.query.id,page.query.color);  
 						}, app.errorCB);          
 				  }, app.errorCB);        
 				}else{
@@ -538,13 +548,13 @@ var app = {
 			  
   			   	    
 		},
-		reloadListDetail:function(title,id,fromNewDeviceInList){
+		reloadListDetail:function(title,id,color,fromNewDeviceInList){
 			  setTimeout(function(){
 				  if (!fromNewDeviceInList){
 					  app.numberReloadListPage = 1;
 				  }
 				  app.listView.router.load({  
-					    url: 'listDetail.html?title='+title+'&id='+id,  
+					    url: 'listDetail.html?title='+title+'&id='+id +'&color='+color,  
 					    animatePages: false,
 					    contextName:'devices', 
 					    reload:true   
@@ -651,7 +661,11 @@ var app = {
         			   
             		 }
             	 }
-            	
+            	 
+            	 app.map.setCenter({
+   	        	  lat:app.currentPosition.Lat,
+   	        	  lng:app.currentPosition.Long
+   	          });
             }
 			
 		},    
@@ -1113,21 +1127,21 @@ var app = {
 			  app.onMapSuccess, app.onMapError,{enableHighAccuracy: true});
 		},
 	    onMapSuccess:function (position) {
-	    	app.currentPosition =  {	 
-		    'Lat': position.coords.latitude,
-		    'Long': position.coords.longitude
-	       };
-	    
-	    if (!app.map){
-    	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-	          zoom: 15,
-	          center: {
-	        	  lat:app.currentPosition.Lat,
-	        	  lng:app.currentPosition.Long
-	          }
-			});
-	    }
-			app.setMarkerDevices();
+		    	app.currentPosition =  {	 
+			    'Lat': position.coords.latitude,
+			    'Long': position.coords.longitude
+		       };
+		    
+		    if (!app.map){
+	    	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
+		          zoom: 15,
+		          center: {  
+		        	  lat:app.currentPosition.Lat,
+		        	  lng:app.currentPosition.Long
+		          }
+				});
+		    }
+				app.setMarkerDevices();
 	    	
 	    	
 	     //  app.renderMap();

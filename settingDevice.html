@@ -1,0 +1,93 @@
+<!-- We don't need full layout in this file because this page will be parsed with Ajax. It is just enough to put here .navbar and .page-->
+ 
+<!-- Top Navbar-->
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="left">
+      <a href="#" class="back link"> 
+        <i class="icon icon-back"></i>
+        <span>Back</span>
+       </a>
+    </div>
+    <div class="center sliding">Setting's Device</div>
+    <div class="right">
+      <a href="#" class="link icon-only open-panel"><i class="icon icon-bars"></i></a>
+    </div>
+  </div>
+</div>
+
+
+
+<!--  <div class="pages">-->
+ <div class="page" data-page="DeviceOption" >
+<div class="page-content">
+    <div class="content-block">          
+<form id="OptionDevice" class="list-block">
+  <ul>
+    <!-- Text inputs -->
+    <li>
+      <div class="item-content-newOpt item-content">
+        <div class="item-inner">
+          <div class="item-title label">Name</div>
+          <div class="item-input">
+            <input type="text" id="namePick_id"  name ="name" placeholder="Pick's Name" value="{{url_query.name}}">
+          </div>
+        </div>
+      </div>
+    </li>
+     <li>
+      <div class=" item-content-newOpt item-content">
+        <div class="item-inner">
+          <div class="item-title label">Image</div>
+         <div class="item-input">
+         <p class="buttons-row">
+			  <a href="#" class="button">Icon</a>
+			  <a href="#" class="button" id="btn_photoid">Photo</a>
+		</p>  
+         </div>
+        </div>
+      </div>
+    </li>
+     <li>
+      <div class=" item-content-newOpt item-content">
+        <div class="item-inner">
+          <div class="item-title label">Alert Mode</div>
+         <div class="item-input">
+        <label class="label-switch">
+		    <input type="checkbox">
+		    <div class="checkbox"></div>
+		  </label>  
+         </div>
+        </div>
+      </div>
+    </li>
+    </ul>
+    </form>
+     </div>  
+    <div class="content-block">   
+         <img id="largeImageDeviceOption" src="" />      
+        <a href="#" id="updateDevice" class="button button-big button-round active">Save</a>
+    </div>
+    
+  <div class="picker-modal picker-info">
+
+    <div class="picker-modal-inner">      
+     <div class="list-block inset">
+	  <ul>
+	    <li>
+	      <a href="#" class="item-link list-button" id="takephoto_btn">Take Photo</a>
+	    </li>
+	    <li>
+	      <a href="#" class="item-link list-button" id="photoLibrary_btn">Photo Library</a>
+	    </li>
+	    </ul>
+	    <ul>  
+	    <li class="btn_cancel">
+	      <a href="#" class="item-link list-button" id="cancelPicker_btn">Cancel</a>
+	    </li>
+	  </ul>
+</div>   
+    </div>
+  </div>
+</div>
+</div>
