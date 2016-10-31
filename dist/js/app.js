@@ -22,6 +22,7 @@ var app = {
 		intervalHome:'',
 		intervalAbout:'',
 		intervalPause:'',
+		intervalConnectionDevice:'',
 		atBackground:'',
 		newDeviceFoto:{},     
 		newListFoto:{},
@@ -86,7 +87,12 @@ var app = {
 							   }       
 							   app.myDevices = JSON.parse(JSON.stringify(resultQuery));
 							   for (var i=0;i<app.myDevices.length;i++){
-								   app.myDevices[i].list = app.myDevices[i].list.split(",");
+								   if (app.myDevices[i].list){
+									   app.myDevices[i].list = app.myDevices[i].list.split(",");
+								   }
+								   else{
+									   app.myDevices[i].list = new Array();
+								   }
 							   }   
 						   }
 						   callback(callback2);    
@@ -205,24 +211,27 @@ var app = {
 						switch (page.name){
 						   case 'about':
 						   {  
-							   var dev = app.devices[page.query.address];
+							   /*var dev = app.devices[page.query.address];
 							   clearInterval(app.intervalAbout);
 							   if (!$.isEmptyObject(dev)){    
 								   dev.close();  
-							   }
-							   app.scanHome();             
+							   }*/
+							   app.scanHome();  
+							  
 						   }    
 						   break;
 						   case 'newDevice':{
-								$$("#toolbar_id").show();     
+								$$("#toolbar_id").show();    
+								clearInterval(app.intervalTemporizzatore);
 								app.stopStop();
 								app.scanHome();    
+								app.setIntervalConnectDevice();
 						   }
 						   break;
 						   case 'listDetailPage':{
 						   
 							   app.numberReloadListPage = 0;
-						
+						  
 						    }
 						   break;
 						   case 'newDeviceOption':{
@@ -255,8 +264,9 @@ var app = {
 					 app.disconnectToDevice();         
 					 app.addNewDevice();     
 						return;  
-				  }    
+		 		  }    
 				  app.loadHome();   
+				  app.setIntervalConnectDevice();
 				  app.devicesRing = new Array();
 				  app.newDeviceFoto = {};
 				  app.loadLists();
@@ -265,20 +275,21 @@ var app = {
 				  app.pageInitHome();
 				  app.pageInitAbout();   
 				  app.pageDeviceOption();
-		},
+		},  
 		initialize:function(){      
 			   // this.deleteAllDevice();    
 			    cordova.plugins.locationManager.requestAlwaysAuthorization();
+			    app.disconnectToDevice();
 			    var delegate = new cordova.plugins.locationManager.Delegate();
 			    cordova.plugins.locationManager.setDelegate(delegate);
-			    this.devices = [];    
+			    this.devices = [];       
 				this.pictureSource = navigator.camera.PictureSourceType,
 			    this.destinationType = navigator.camera.DestinationType,  
 				this.db =  window.openDatabase("DatabasePick", "1.0", "Pick", 200000);
 				this.db.transaction(this.populateDB, this.errorCB);
 				//this.db.transaction(this.dropTables, this.errorCB);
 				this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome);     
-			    
+			      
 		},   
 		successCB:function(){  
 			 app.db.transaction(app.queryDB, app.errorCB);    
@@ -305,9 +316,8 @@ var app = {
 		pageInitHome:function(){
 			
 			  app.iPickView.onPageInit('home', function (page) {
-				 // app.viewMain.params.dynamicNavbar = true;
-				       
-                  /**
+				 // app.viewMain.params.dynamicNavbar = true;				       
+                  /**  
                    * devo bloccare momentaneamente l'aggiornamento della home altrimenti
                    * mi fa sparire il "delete", lo ripristino in chiusura
                    */				  
@@ -327,6 +337,12 @@ var app = {
 					    	   app.deleteDevice(tx,idDevice)
 					    	   for (var i=0;i<app.myDevices.length;i++){
 					    		   if (app.myDevices[i].id == idDevice){
+					    			   var address = app.myDevices[i].address;
+					    			   var dev = app.devices[address]
+					    			   if (dev){
+					    				   dev.close();
+					    				   delete app.devices[address];
+					    			   }
 					    			   app.myDevices.splice(i, 1);
 					    			   break;
 					    		   }         
@@ -347,15 +363,16 @@ var app = {
 		pageInitAbout:function(){
 			  
 			 app.iPickView.onPageInit('about', function (page) {
-				 app.iPickView.showPreloader();
+				// app.iPickView.showPreloader();
 				// app.viewMain.params.dynamicNavbar = true;
 				 clearInterval(app.intervalHome);  
+				 app.stopStop();
 				 var addressItrackSelected = page.query.address;
-				 app.connectToDevice(addressItrackSelected);
+				 //app.connectToDevice(addressItrackSelected);
 				  
 				 app.intervalAbout = setInterval(function(){
 					 var device  = app.devices[addressItrackSelected];  
-					   
+					          
 					 device.readRSSI(    
 					   function(rssi){
 						   if (rssi<= 0){
@@ -451,7 +468,7 @@ var app = {
 				  
 				    
 					$$('.listLi').on('click',function(e){
-						 var listToCheck = $$(this).prop('id')*1;
+						 var listToCheck = $$(this).prop('id')*1;   
 						  //salvo temporaneamente l'href perchè altrimenti mi butta nel dettaglio
 						  var listLi = $$(this);
 						  var aParents = $$(this).parents( "a" );
@@ -465,7 +482,7 @@ var app = {
 								   var deviceDisconnected = '';
 								   for (var i=0;i<len;i++){  
 									   if (!app.checkDeviceIfConnectedById(results.rows.item(i).id)){
-										   deviceDisconnected+= results.rows.item(i).name + ' ';	   
+										   deviceDisconnected+= results.rows.item(i).name + ' ';	   //
 									   }
 								   }
 								   
@@ -624,7 +641,7 @@ var app = {
             			  var stringDevCon = '<div class="winMarkGree">Now Connected &nbsp;&nbsp;&nbsp;&nbsp;'+ 
             				  '<span class="badge connected"></span>'+
             				  '</div>';
-            		  }else{
+            		  }else{  
             			  var stringDevCon = '<div class="winMarkRed">Disconnected &nbsp;&nbsp;&nbsp;&nbsp;'+
             			 '<span class="badge notconnected"></span>'+
             			 '</div><div class="lastSeen"><b>Last Seen: '+app.getDate(app.myDevices[i].last_seen)+'</b></div>';
@@ -662,14 +679,14 @@ var app = {
             		 }
             	 }
             	 
-            	 app.map.setCenter({
+              /* 	 app.map.setCenter({    
    	        	  lat:app.currentPosition.Lat,
    	        	  lng:app.currentPosition.Long
-   	          });
+   	          });*/
             }
 			
 		},    
-		getDate:function(timestamp){
+		getDate:function(timestamp){    
 			var dataDaFormattare = new Date(timestamp);
 			     
 			var dataFormattata = dataDaFormattare.getDate()+'/'+(dataDaFormattare.getMonth()+1)+'/'+dataDaFormattare.getFullYear();
@@ -679,7 +696,7 @@ var app = {
 		    
 		resetMarker:function(){
 			if (app.markers.length){
-				for (var i=0;i<app.markers.length;i++){
+				for (var i=0;i<app.markers.length;i++){   
 					app.markers[i].setMap(null);
 				}
 				  
@@ -696,6 +713,7 @@ var app = {
 		},    
 		scanHome:function(){
 			  app.startScan();
+			
 			  app.intervalHome = setInterval(function(){
 				  app.viewMain.router.load({
 					    url: 'home.html',
@@ -704,26 +722,31 @@ var app = {
 					    reload:true     
 					});            
 				   $$("#logoPick").prop("src",app.logoInBase64);
-				 // app.viewMain.showNavbar();
-				  app.updateConnectionDeviceNotFound();
+				  //app.updateConnectionDeviceNotFound();
 			  },6000);      
 			      
 			  app.intervalPositionFn(); 
-		},        
+		},       
+		setIntervalConnectDevice: function(){
+			app.intervalConnectionDevice = setInterval(function(){
+				app.connectToDevice(false);  
+			},3000);
+		},    
 		intervalPositionFn:function(){
 			  app.intervalPosition = setInterval(function(){
 				  app.getCurrentPosition();
 			  },15000);       
-		},
+		},  
 		stopStop:function(){
-			app.updateConnectionDeviceNotFound();
+			//app.updateConnectionDeviceNotFound();
 			evothings.easyble.stopScan();  
-			app.disconnectToDevice();  
-		},       
-		    
+			//app.disconnectToDevice();  
+		},         
+		      
 		addNewDevice:function (){
 			 //$.mobile.changePage("#newDevice",{transition: "slide",  allowSamePageTransition: true,reloadPage: false }); 
 			clearInterval(app.intervalHome);
+			clearInterval(app.intervalConnectionDevice);
 		 	this.viewMain.router.load({
 			    url: 'newDevice.html',  
 			    animatePages: true      
@@ -893,17 +916,16 @@ var app = {
 			var j = 0;
 			 for (var i=0;i<app.myDevices.length;i++){
 				 if (app.myDevices[i].address == device.address){
-					 if (!app.myDevices[i].lastUpdate || (app.myDevices[i].lastUpdate  && (Date.now() - app.myDevices[i].lastUpdate) > 4000)){
 				     app.myDevices[i].lastUpdate = Date.now();
 					 app.myDevices[i].connected = 'connected';
+					 if (device.rssi <= 0){
+						 app.myDevices[i].rssi = app.calculateRssiDist(device.rssi);
+					 }  
 					 if (app.currentPosition){   
 						 var lat =  app.currentPosition.Lat+j;
 						 app.myDevices[i].lat = app.currentPosition.Lat ;
 						 app.myDevices[i].long = app.currentPosition.Long ;
-						 if (device.rssi <= 0){
-							
-							 app.myDevices[i].rssi = app.calculateRssiDist(device.rssi);
-						 }  
+						
 						 var id = app.myDevices[i].id;
 						 app.db.transaction(function(tx){
 						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,id], 
@@ -911,10 +933,8 @@ var app = {
 							}, app.errorCB);  
 						   }); 
 					 }      
-			    }      
-		     }          
+		     }            
 		  }  
-	     
 		},   
 		calculateRssiDist:function(rssi){
 			
@@ -931,28 +951,37 @@ var app = {
 			
 			 return dist;
 		},
-		updateConnectionDeviceNotFound:function(){ 
-			var timeConnectionToCheck;
-			if (app.atBackground){       
-				timeConnectionToCheck = 15000;
-			}else{  
-				timeConnectionToCheck = 7000;   
-			}  
+		alertDeviceConnectionLost:function(address){ 
+		      
 			 for (var dev in app.myDevices){
-				 var device = app.myDevices[dev].address;  
-				 if (typeof(app.devices[device])!='undefined' && app.devices[device].lastSeen &&  ( Date.now() - app.devices[device].lastSeen > timeConnectionToCheck && !app.devices[device].alerted)){
-					 app.devices[device].alerted = true;
-					 if (app.atBackground){       
-						 cordova.plugins.notification.local.schedule({
-				    			id: app.idNotification,
-				    			title: app.myDevices[dev].name });
-						 app.idNotification++;
-					 }else{  
-						 app.myDevices[dev].connected = 'notconnected';  
-					 }   
-					   
-				 } 
-			 } 
+				 if (app.myDevices[dev].address == address && !app.devices[address].alerted){
+				 app.devices[address].alerted = true;
+				 app.myDevices[dev].lastUpdate = Date.now();
+				 
+				 if (app.currentPosition){   
+					 var lat =  app.currentPosition.Lat;
+					 app.myDevices[dev].lat = app.currentPosition.Lat ;
+					 app.myDevices[dev].long = app.currentPosition.Long ;
+					 var now = Date.now();
+					 var id = app.myDevices[dev].id;
+					 app.db.transaction(function(tx){
+					  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
+						 function(tx, results){  
+						}, app.errorCB);  
+					   }); 
+				 }      
+				    
+				 
+				 if (app.atBackground){           
+					 cordova.plugins.notification.local.schedule({
+			    			id: app.idNotification,
+			    			title: app.myDevices[dev].name });
+					 app.idNotification++; 
+				 }else{  
+					 app.myDevices[dev].connected = 'notconnected';  
+				 }       
+			  }	   
+		 }   
 		},  
 		checkDeviceIfConnectedById: function(id){
 			for (var dev in app.myDevices){
@@ -977,59 +1006,76 @@ var app = {
 						device.lastSeen = Date.now();
 						device.alerted = false;
 						app.devices[device.address] = device;   
-						if (newDev==true && !app.isMyDevice(device.address)){ 
-							app.connectToDevice(device.address,newDev);     
-						}else{      
-							if (!newDev){
-							 app.updateConnectionDeviceFound(device);
-							}
-						}    
-				    }    
-				},
+				    }       
+					if (newDev){  
+						app.connectToDevice(true,device);
+					}
+				},   
 				function(error)      
 				{     
-					
+					console.log("sti cazzi");  
 				},
 				 { serviceUUIDs: ['0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb'] }
 			    );
-		
+		    
 		},
 		disconnectToDevice:function(){
 			evothings.easyble.closeConnectedDevices();
-		},  
-		/**
+		},    
+		/**    
 		 * Read services for a device.
 		 */
-		connectToDevice:function(deviceAddress,newDev)      
-		{
-			var device  = app.devices[deviceAddress];   
-			if (!$.isEmptyObject(device)){
-				//evothings.easyble.stopScan();
-			 //if (app.DeviceConnected[deviceAddress] == null ){            
-				device.connect(   
-					function(device)   
-					{       
-						app.showInfo('Status: Connected');
-					    app.readServices(device,newDev);
-					},  
-					function(errorCode)   
-					{
-						//app.deviceJustConnected.push(deviceAddress);
-						app.showInfo('Error: Connection failed: ' + errorCode + ' and deviceAddress: '+deviceAddress); 
-						device.close();   
-						//app.connectToDevice(deviceAddress);
-						     
-					});
-				
-			}
-			else{
-				app.connectToDevice(deviceAddress);  
-				//app.iPickView.hidePreloader(); 
-			}
-				
-		      // }  
+		connectToDevice:function(newDev,device)      
+		{     
 			
-		},  
+			if (newDev && device){
+				console.log(device.address);
+				device.connect(         
+				function(device)    
+				{       
+				    app.readServices(device,newDev);
+				},    
+				function(errorCode)   
+				{  
+					console.log("closo");
+					device.close();  
+					evothings.easyble.closeConnectedDevices();
+				});     
+				
+			}else{
+				
+			for (var i in app.devices){
+				  
+                 var device = app.devices[i];
+				if (device && app.isMyDevice(device.address)  && !device.isConnected()){
+			  
+				device.connect(       
+					function(device)    
+					{       
+						app.devices[i].alerted = false;  
+						app.devices[i].connected = 'connected';  
+					    app.updateConnectionDeviceFound(device);
+					    app.readServices(device);
+					},    
+					function(errorCode)   
+					{  
+						//app.setNotConnectedDevice(device);//app.devices[i].connected = 'notconnected';  
+					
+						if (errorCode.indexOf('device already connected') !== -1){
+							console.log("here");		
+							device.close();
+						}
+						else{
+							app.alertDeviceConnectionLost(device.address);
+							delete app.devices[i];  
+							app.showInfo('Error: Connection failed: ' + errorCode + ' and deviceAddress: '+i); 
+						}       
+					});
+				 
+				}  
+		       }  
+			}
+		},    
 		readBattery: function(device){
 			device.readServiceCharacteristic(    
 					   '0000180f-0000-1000-8000-00805f9b34fb', 
@@ -1086,8 +1132,13 @@ var app = {
 			      console.log('Pairing mode value error: ' + errorCode);  
 			    });
 		},
-		
-		
+		setNotConnectedDevice: function(device){
+			for (var i=0;i<app.myDevices.length;i++){
+				if (app.myDevices[i].address == device.address){
+					app.myDevices[i].connected = 'notconnected';
+				}
+			}
+		},
 		
 		chooseOptionsNewDevice: function(device){
 			//$.mobile.changePage("#optionNewDevice",{transition: "slide",  allowSamePageTransition: true,reloadPage: false });  
@@ -1111,7 +1162,7 @@ var app = {
 				$$("#takephoto_btn").on('click',function(){
 				   app.iPickView.closeModal('.picker-info');
 				   app.openCamera('camera-thmb','largeImage',device,app.setFotoNewDevice);	  
-				
+				 
 				});
 				
 				$$("#saveNewDevice").on('click',function(){
@@ -1120,7 +1171,7 @@ var app = {
 						window.location='index.html';              
 				});  
 		    });  
-		},
+		},     
 		
 		getCurrentPosition: function(){
 			navigator.geolocation.getCurrentPosition(
@@ -1173,6 +1224,12 @@ var app = {
 			  function(data)  
 			  {  
 			    var res = new Uint8Array(data)[0];
+			    if (res == 8){
+			    	var address =device.address;
+			    	if (app.devicesRing[address]){
+			    		app.onToggleButton(address);
+			    	}
+			    }    
 			  },
 			  function(errorCode)
 			  {
@@ -1197,15 +1254,15 @@ var app = {
 			device.readServices(  
 			    serviceUID,     
 				function(device)   
-				{   
+				{             
 					if (newDev==true){
 						app.readPairingMode(device);
 					}
 					else{     
 						app.readBattery(device);
-						app.writePasswordiTrak(device);  
+						app.writePasswordiTrak(device);     
 						//abilito il click sul pulsante
-			            app.logClick(device);		
+			            app.logClick(device);	
 					}
 				},
 				function(error)  
@@ -1252,7 +1309,7 @@ document.addEventListener('pause', function(){
 }, false);   
   
 
-document.addEventListener('resume', function(){
+document.addEventListener('resume', function(){ 
 	app.atBackground = false;  
 	clearInterval(app.intervalPause);   
 	
@@ -1260,4 +1317,4 @@ document.addEventListener('resume', function(){
    
         
  
-    
+        
