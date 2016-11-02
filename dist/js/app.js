@@ -74,7 +74,7 @@ var app = {
 		getMyDevice:function(callback,callback2){
 		  // this.myDevices = JSON.parse(localStorage.getItem('myDevices'));
 		  this.db.transaction(function(tx){
-			  tx.executeSql("SELECT d.id, d.name, d.last_seen, d.address , d.connected ,d.long, d.lat ,d.image, GROUP_CONCAT(li.color) as list  FROM devices d left join deviceinlist "+
+			  tx.executeSql("SELECT d.id, d.name, d.last_seen, d.address , d.connected ,d.long, d.lat ,d.image,d.safetymode, GROUP_CONCAT(li.color) as list  FROM devices d left join deviceinlist "+
 					  "l on (d.id = l.iddevice) left join lists li on (li.id = l.idlist ) group by d.address", [], 
 				 function(tx, results){    
 				           var len=results.rows.length;  
@@ -137,7 +137,8 @@ var app = {
 					image:image,     
 					list: [],
 					connected:'notconnected',
-					last_seen:Date.now()
+					last_seen:Date.now(),
+					safetymode:0
 				
 			};
 			  
@@ -145,7 +146,7 @@ var app = {
 			app.myDevices = myDev;
 			
 		    this.db.transaction(function(tx){
-				  tx.executeSql('insert into devices (id,address,name,image,connected, last_seen) values (?,?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image ,obj.connected,obj.last_seen], 
+				  tx.executeSql('insert into devices (id,address,name,image,connected, last_seen,safetymode) values (?,?,?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image ,obj.connected,obj.last_seen,obj.safetymode], 
 					 function(tx, results){  
 					}, app.errorCB);
 		    });  
@@ -211,13 +212,13 @@ var app = {
 						switch (page.name){
 						   case 'about':
 						   {  
-							   /*var dev = app.devices[page.query.address];
 							   clearInterval(app.intervalAbout);
+							   /*var dev = app.devices[page.query.address];
+							 
 							   if (!$.isEmptyObject(dev)){    
 								   dev.close();  
 							   }*/
 							   app.scanHome();  
-							  
 						   }    
 						   break;
 						   case 'newDevice':{
@@ -229,14 +230,22 @@ var app = {
 						   }
 						   break;
 						   case 'listDetailPage':{
-						   
+						   console.log("qua");
 							   app.numberReloadListPage = 0;
-						  
+							   setTimeout(function(){
+								   app.listView.router.load({
+									    url: 'list.html',
+									    animatePages: false,
+									    contextName:'devices',
+									    reload:true
+									});
+								   $$("#logoPickList").prop("src",app.logoInBase64);
+							   },2000);    
 						    }
 						   break;
 						   case 'newDeviceOption':{
 							   
-							   clearInterval(app.intervalTemporizzatore);
+							   clearInterval(app.intervalTemporizzatore); 
 							   
 						   }
 						   break;
@@ -288,6 +297,7 @@ var app = {
 				this.db =  window.openDatabase("DatabasePick", "1.0", "Pick", 200000);
 				this.db.transaction(this.populateDB, this.errorCB);
 				//this.db.transaction(this.dropTables, this.errorCB);
+				//return;
 				this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome);     
 			      
 		},   
@@ -304,7 +314,7 @@ var app = {
 	        console.log("Error processing SQL: "+JSON.stringify(err));
 	    },
 		populateDB:function(tx){  
-			 tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICES (id unique,address,name,image,connected, long,lat, last_seen)');
+			 tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICES (id unique,address,name,image,connected,safetymode, long,lat, last_seen)');
 			 tx.executeSql('CREATE TABLE IF NOT EXISTS LISTS (id unique,name,image,color)');
 	         tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICEINLIST (idlist,iddevice)');    
 		},    
@@ -417,14 +427,15 @@ var app = {
 			
 			 app.iPickView.onPageInit('DeviceOption', function (page) {
 				// app.viewMain.params.dynamicNavbar = true;
+				 app.updateDeviceFoto = '';
 				 for (var i=0;i<app.myDevices.length;i++){
 					 if (app.myDevices[i].id == page.query.id){
 						 var image = document.getElementById('largeImageDeviceOption');    
 				    	 image.src =  "data:image/jpeg;base64,"+app.myDevices[i].image;  
+				    	 app.updateDeviceFoto = app.myDevices[i].image;
 				    	 break;
 					 }
   				 }
-				 
 				 
 				 $$('#btn_photoid').on('click', function () {
 					  app.iPickView.pickerModal('.picker-info');
@@ -433,17 +444,16 @@ var app = {
 				$$('#cancelPicker_btn').on('click', function () {
 					app.iPickView.closeModal('.picker-info');
 				}); 
-				
+				  
 				
 				$$("#takephoto_btn").on('click',function(){
 				   app.iPickView.closeModal('.picker-info');
 				   app.openCamera('camera-thmb','largeImageDeviceOption',device,app.setUpdateDeviceFoto);	  
-				
 				});
 				
 				$$("#updateDevice").on('click',function(){
 					//if($$("#namePick_id").val() && app.newDeviceFoto){
-						app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto);
+						app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"));
 						window.location='index.html';                      
 				});  
 				 
@@ -585,18 +595,18 @@ var app = {
 		loadLists:function(){
 			if ($.isEmptyObject(app.myLists)){     
 					//app.showMyDevice();            
-					this.addNewList();   
+					 app.addNewList();   
 					 $$("#add_listId").hide();    
 					return;  
 			}else{    
-				this.listView.router.load({
+				app.listView.router.load({
 				    url: 'list.html',
 				    animatePages: false,
-				    contextName:'devices'       
-				 
+				    contextName:'devices'
+				  
 				});
-				this.pageInitList();
-				this.pageInitListDetail();    
+				app.pageInitList();
+				app.pageInitListDetail();    
 			}  
 			     
 		},    
@@ -710,7 +720,7 @@ var app = {
 			    animatePages: false
 			});  
 			this.scanHome();
-		},    
+		},      
 		scanHome:function(){
 			  app.startScan();
 			
@@ -723,7 +733,7 @@ var app = {
 					});            
 				   $$("#logoPick").prop("src",app.logoInBase64);
 				  //app.updateConnectionDeviceNotFound();
-			  },6000);      
+			  },2000);      
 			      
 			  app.intervalPositionFn(); 
 		},       
@@ -777,7 +787,7 @@ var app = {
 			app.temporizzatoreCount++;
 		},
 		addNewList: function(){  
-			this.listView.router.load({
+			app.listView.router.load({
 			    url: 'newList.html',
 			    animatePages: true      
 			});  
@@ -972,7 +982,7 @@ var app = {
 				 }      
 				    
 				 
-				 if (app.atBackground){           
+				 if (app.atBackground && app.myDevices[dev].safetymode==1){           
 					 cordova.plugins.notification.local.schedule({
 			    			id: app.idNotification,
 			    			title: app.myDevices[dev].name });
@@ -992,13 +1002,16 @@ var app = {
 				}  
 			 } 
 			return false;
-		},     
+		},  
+		updateLocalStorageDevice:function(){
+			localStorage.setItem('devicesPick', JSON.stringify(app.devices));
+		},
 		startScan: function(newDev)  
 		{ 
-		 
+		   
 			if (newDev){
 			  app.timeStartScanNewDev = new Date().getTime();
-			}
+			}   
 			//evothings.ble.startScan(   
 			evothings.easyble.startScan(     
 				function(device){    
@@ -1006,11 +1019,12 @@ var app = {
 						device.lastSeen = Date.now();
 						device.alerted = false;
 						app.devices[device.address] = device;   
-				    }       
+						app.updateLocalStorageDevice();
+				    }         
 					if (newDev){  
 						app.connectToDevice(true,device);
 					}
-				},   
+				},      
 				function(error)      
 				{     
 					console.log("sti cazzi");  
@@ -1020,6 +1034,17 @@ var app = {
 		    
 		},
 		disconnectToDevice:function(){
+			var allDevices = localStorage.getItem('devicesPick');
+			if (!$.isEmptyObject(allDevices)){
+				allDevices = JSON.parse(allDevices);
+				for (var obj in allDevices){
+					if (allDevices[obj].isConnected()){
+						allDevices[obj].close();
+					}
+				}
+			}
+			   
+			   
 			evothings.easyble.closeConnectedDevices();
 		},    
 		/**    
@@ -1074,6 +1099,8 @@ var app = {
 				 
 				}  
 		       }  
+			
+			
 			}
 		},    
 		readBattery: function(device){
@@ -1205,11 +1232,17 @@ var app = {
 		 // app.initialize();
 		
 		},
-		updateDevice:function(id,name,image){
+		updateDevice:function(id,name,image,safetymode){
 			var idDevice = id*1;    
+			if (safetymode==true){
+				safetymode = "checked";
+			}
+			else{
+				safetymode = '';
+			}
 		    app.db.transaction(function(tx){
-				  tx.executeSql('update devices set name = ? ,image = ? where id = ?', [name,image,idDevice],   
-					 function(tx, results){  
+				  tx.executeSql('update devices set name = ? ,image = ? ,safetymode = ? where id = ?', [name,image,safetymode,idDevice],   
+					 function(tx, results){    
 					}, app.errorCB);
 		    });    
 		},   

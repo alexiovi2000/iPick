@@ -1,6 +1,3 @@
-<!-- We don't need full layout in this file because this page will be parsed with Ajax. It is just enough to put here .navbar and .page-->
- 
-<!-- Top Navbar-->
 <div class="navbar">
   <div class="navbar-inner">
     <div class="left">
@@ -9,54 +6,78 @@
         <span>Back</span>
        </a>
     </div>
-    <div class="center sliding"><img id="img_settingDevice" src="key-icon.png"></div>
+    <div class="center sliding">Setting's List</div>
     <div class="right">
       <a href="#" class="link icon-only open-panel"><i class="icon icon-bars"></i></a>
     </div>
   </div>
-</div>
-<!--  <div class="pages">-->
-  <div data-page="setting" class="page">
-    <div class="page-content">
-      <div class="content-block">
-       <div class="list-block">
+</div> 
+<div class="page" data-page="updateList" >
+<div class="page-content">
+    <div class="content-block">          
+<form id="newListForm_id" class="list-block">
   <ul>
     <!-- Text inputs -->
     <li>
-      <div class="item-content">
-        <div class="item-media"><i class="fa fa-camera-retro fa-lg" aria-hidden="true"></i></div>
+      <div class="item-content-newOpt item-content">
         <div class="item-inner">
-          <div class="item-title label">{{url_query.listName}}</div>
+          <div class="item-title label">Name</div>
           <div class="item-input">
-            <input type="text" placeholder="Your name">
+            <input type="text" id="List_id"  name ="name" placeholder="List's Name">
           </div>
+        </div>
+      </div>   
+    </li>
+        <li>
+        <div class="item-content-newOpt item-content">
+          <div class="item-inner"  id="listColorId_input">
+          	<div class="item-title label">Color's List</div>   
+          		<div class="item-input">
+            		<div class="create-picker" placeholder="Choose Color">&nbsp;</div>
+          	</div>
+        </div>
+        </div>
+    </li>
+     <li>
+      <div class=" item-content-newOpt item-content">
+        <div class="item-inner">
+          <div class="item-title label">Image</div>
+         <div class="item-input">
+        <p class="buttons-row">
+			  <a href="#" class="button">Icon</a>
+			  <a href="#" class="button" id="btn_photoListid">Photo</a>
+		</p>
+         </div>
         </div>
       </div>
     </li>
-    <li>
-      <div class="item-content">
-        <div class="item-media"><i class="icon icon-form-email"></i></div>
-        <div class="item-inner">
-          <div class="item-title label">E-mail</div>
-          <div class="item-input">
-            <input type="email" placeholder="E-mail">
-          </div>
-        </div>
-      </div>
-    </li>
-    calc
     </ul>
+    </form>
+     </div>  
+    <div class="content-block">     
+         <img id="largeImageList" src="" />      
+        <a href="#" id="saveNewList" class="button button-big button-round active">Save</a>
     </div>
-      </div>
-      
-      
-       <div class="content-block">
-        <p>Here is About page!</p>
-        <p>Fusce eros lectus, accumsan eget mi vel, iaculis tincidunt felis. Nulla tincidunt pharetra sagittis. Fusce in felis eros. Nulla sit amet aliquam lorem, et gravida ipsum. Mauris consectetur nisl non sollicitudin tristique. Praesent vitae metus ac quam rhoncus mattis vel et nisi. Aenean aliquet, felis quis dignissim iaculis, lectus quam tincidunt ligula, et venenatis turpis risus sed lorem. Morbi eu metus elit. Ut vel diam dolor.</p>
-      </div>
-      
-      
-      <div class="create-page">Create Page now</div>
-    </div> 
+    
+  <div class="picker-modal picker-info-list">
+
+    <div class="picker-modal-inner">      
+     <div class="list-block inset">
+	  <ul>
+	    <li>
+	      <a href="#" class="item-link list-button" id="takephotoList_btn">Take Photo</a>
+	    </li>
+	    <li>
+	      <a href="#" class="item-link list-button" id="photoLibrary_btn">Photo Library</a>
+	    </li>
+	    </ul>
+	    <ul>  
+	    <li class="btn_cancel">
+	      <a href="#" class="item-link list-button" id="cancelPicker_btn">Cancel</a>
+	    </li>
+	  </ul>
+</div>   
+    </div>
   </div>
-       
+</div>
+</div>

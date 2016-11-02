@@ -131,7 +131,7 @@ evothings.__NOOP_FUN__ = function() {};
 	 */
 	evothings.loadScripts = function(array, loadedCallback)
 	{
-		var lib = array.shift();
+		var lib = array.shift();  
 		if (!lib)
 		{
 			// Array is empty and all scripts are loaded.

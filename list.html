@@ -4,9 +4,9 @@
 						<a href="#" class="link icon-only open-panel"> <i
 							class="icon icon-bars"></i></a>
 					</div>
-					<div class="center sliding"><img class="img-custom" src="dist/img/PIK_azzurro_small.png"></div>
+					<div class="center sliding"><img class="img-custom" id="logoPickList" src="dist/img/PIK_azzurro_small.png"></div>
 					<div class="right">
-						<a href="#" class="link icon-only" id="add_listId">+</a>
+						<a href="#" class="link icon-only" id="add_listId" onclick="app.addNewList(); ">+</a>
 					</div>
 				</div>
   </div>  
@@ -15,7 +15,7 @@
 		<div class="list-block list-block-custom">
 			<ul>
 		    {{#each this.lists}}
-				<li class="back{{this.color}}"><a href="listDetail.html?title={{this.name}}&id={{this.id}}" data-context-name="devices" 
+				<li class="back{{this.color}}"><a href="listDetail.html?title={{this.name}}&id={{this.id}}&color={{this.color}}" data-context-name="devices" 
 					class="item-link item-content item-content-custom pippop">
 						<div class="item-media">
 							<i class="icon icon-f7"></i>  
@@ -31,4 +31,4 @@
 			</ul>
 		</div>
 	</div>
-</div>
+</div>  
