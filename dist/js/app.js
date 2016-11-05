@@ -41,6 +41,7 @@ var app = {
 		temporizzatoreCount: 0,
 		intervalTemporizzatore:0,
 		logoInBase64:'',
+		updateListFoto:'',
 	    toDataUrl:function(src, callback, outputFormat) {
 			  var img = new Image();
 			  img.crossOrigin = 'Anonymous';
@@ -284,6 +285,7 @@ var app = {
 				  app.pageInitHome();
 				  app.pageInitAbout();   
 				  app.pageDeviceOption();
+				  app.pageInitUpdateList();
 		},  
 		initialize:function(){      
 			   // this.deleteAllDevice();    
@@ -308,7 +310,7 @@ var app = {
 			  tx.executeSql('SELECT * FROM devices', [], app.querySuccess, app.errorCB);
 		},
 		querySuccess:function(tx, results){
-		
+		                
 		},  
 		errorCB:function(err) {
 	        console.log("Error processing SQL: "+JSON.stringify(err));
@@ -460,6 +462,106 @@ var app = {
 				 
 			 });
 		},
+		pageInitUpdateList: function(){
+			 app.iPickView.onPageInit('updateList', function (page) {
+				 
+				 
+				 for (var i=0;i<app.myLists.length;i++){
+					 if (app.myLists[i].id == page.query.id){
+						 var image = document.getElementById('largeImageListUpd');    
+				    	 image.src =  "data:image/jpeg;base64,"+app.myLists[i].image;  
+				    	 app.updateListFoto = app.myLists[i].image;
+				    	 break;
+					 }
+  				 }
+				 
+				 var colorChoosen = '';
+					$$('#listColorId_inputUpd').on('click', function () {
+						  // Check first, if we already have opened picker
+						  if ($$('.picker-modal.modal-in').length > 0) {
+							  app.iPickView.closeModal('.picker-modal.modal-in');
+						  }
+						  app.iPickView.pickerModal(
+						    '<div class="picker-modal">' +
+						      '<div class="toolbar">' +
+						        '<div class="toolbar-inner">' +
+						          '<div class="left"></div>' +
+						          '<div class="right"><a href="#" class="close-picker">Close</a></div>' +
+						        '</div>' +
+						      '</div>' +
+						      '<div class="picker-modal-inner">' +
+						        '<div class="content-block">' +
+						          ' <div class="row" id="sto">'+
+						         '<div  class="col-auto redColor">&nbsp;</div>'+
+						        '<div class="col-auto yellowColor">&nbsp;</div>'+
+						        '<div  class="col-auto greenColor">&nbsp;</div>'+
+						        '</div>' +
+						        ' <div class="row">'+
+						         '<div class="col-auto greyColor">&nbsp;</div>'+
+						        '<div class="col-auto  lblueColor">&nbsp;</div>'+
+						        '<div class="col-auto  orangeColor">&nbsp;</div>'+
+						        '</div>' +
+						        '</div>' +
+						      '</div>' +
+						    '</div>'
+						  );
+						  
+							$$(".col-auto").on('click',function(){
+							  var txtClass = $$(this).attr("class").split(" ")[1];
+							  app.iPickView.closeModal('.picker-modal.modal-in');
+							   switch(txtClass){
+							   case 'redColor':{
+								   $$('.create-picker').css('background','red');
+								   colorChoosen = 'red';
+							   }  
+							   break;
+							   case 'yellowColor':{
+								   $$('.create-picker').css('background','yellow');
+								   colorChoosen = 'yellow';
+							   }
+							   break;
+							   case 'greenColor':{
+								   $$('.create-picker').css('background','green');
+								   colorChoosen = 'green';
+							   }
+							   break;
+							   case 'orangeColor':{
+								   $$('.create-picker').css('background','orange');
+								   colorChoosen = 'orange';
+							   }
+							   break;
+							     
+							   }
+							   
+							});
+						}); 
+					
+					$$('#cancelPicker_btn').on('click', function () {
+						app.iPickView.closeModal('.picker-info-list');
+					});
+					
+					
+					$$('#btn_photoListidUpd').on('click', function () {
+						  app.iPickView.pickerModal('.picker-info-list');
+				    });
+					
+					
+					$$("#takephotoList_btnUpd").on('click',function(){
+					   app.iPickView.closeModal('.picker-info-list');
+					   app.openCamera('camera-thmb','largeImageList','',app.setFotoUpdateList);	  
+					});
+					
+					$$("#saveUpdateList").on('click',function(){
+						app.saveUpdateList(page.query.id,$$("#List_id_upd").val(),colorChoosen);
+						window.location='index.html';              
+				});  
+				 
+				 
+				 
+				 
+			 });
+		},
+		
 		pageInitList:function(){   
 			 app.iPickView.onPageInit('listPage', function (page) {
 				
@@ -846,6 +948,11 @@ var app = {
 								   colorChoosen = 'green';
 							   }
 							   break;
+							   case 'orangeColor':{
+								   $$('.create-picker').css('background','orange');
+								   colorChoosen = 'orange';
+							   }
+							   break;
 							     
 							   }
 							   
@@ -862,6 +969,10 @@ var app = {
 					   app.openCamera('camera-thmb','largeImageList','',app.setFotoNewList);	  
 					});
 					
+					$$('#cancelPicker_btn').on('click', function () {
+						app.iPickView.closeModal('.picker-info-list');
+					})
+					
 					$$("#saveNewList").on('click',function(){
 						app.saveNewList($$("#List_id").val(),colorChoosen);
 						window.location='index.html';              
@@ -869,7 +980,7 @@ var app = {
 			  });      
 			
 		},  
-		 setOptionsCamera:function(srcType) {
+		setOptionsCamera:function(srcType) {
 		    var options = {
 		        // Some common settings are 20, 50, and 100
 		        quality: 50,
@@ -910,6 +1021,9 @@ var app = {
 		},
 		setFotoNewList:function(imageData){
 			app.newListFoto = imageData;
+		},
+		setFotoUpdateList:function(imageData){
+			app.updateListFoto = imageData;
 		},
 		setUpdateDeviceFoto:function(imageData){
 			app.updateDeviceFoto = imageData;
@@ -1246,8 +1360,19 @@ var app = {
 					}, app.errorCB);
 		    });    
 		},   
+		updateList: function(id,name,color){
+			var idList = id*1;
+			app.db.transaction(function(tx){
+				  tx.executeSql('update lists set name = ? ,image = ? ,color = ? where id = ?', [name,app.updateListFoto,color,idList],   
+					 function(tx, results){    
+					}, app.errorCB);
+		    });    
+		},
 		saveNewList:function(nameList,color){
 			app.setMyList(nameList,color);
+		},
+		saveUpdateList:function(idList,nameList,color){
+			app.updateList(idList,nameList,color);
 		},
 		logClick:function(device){
 			console.log("log click");

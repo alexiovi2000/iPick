@@ -23,17 +23,17 @@
         <div class="item-inner">
           <div class="item-title label">Name</div>
           <div class="item-input">
-            <input type="text" id="List_id"  name ="name" placeholder="List's Name">
+            <input type="text" id="List_id_upd"  name ="name" placeholder="List's Name" value="{{url_query.listName}}">
           </div>
         </div>
       </div>   
     </li>
         <li>
         <div class="item-content-newOpt item-content">
-          <div class="item-inner"  id="listColorId_input">
+          <div class="item-inner"  id="listColorId_inputUpd">
           	<div class="item-title label">Color's List</div>   
           		<div class="item-input">
-            		<div class="create-picker" placeholder="Choose Color">&nbsp;</div>
+            		<div class="create-picker" style="background:{{url_query.color}};" placeholder="Choose Color">&nbsp;</div>
           	</div>
         </div>
         </div>
@@ -45,18 +45,18 @@
          <div class="item-input">
         <p class="buttons-row">
 			  <a href="#" class="button">Icon</a>
-			  <a href="#" class="button" id="btn_photoListid">Photo</a>
+			  <a href="#" class="button" id="btn_photoListidUpd">Photo</a>
 		</p>
          </div>
         </div>
       </div>
     </li>
-    </ul>
+    </ul>       
     </form>
-     </div>  
+     </div>     
     <div class="content-block">     
-         <img id="largeImageList" src="" />      
-        <a href="#" id="saveNewList" class="button button-big button-round active">Save</a>
+         <img id="largeImageListUpd" src="" />      
+        <a href="#" id="saveUpdateList" class="button button-big button-round active">Save</a>
     </div>
     
   <div class="picker-modal picker-info-list">
@@ -65,10 +65,10 @@
      <div class="list-block inset">
 	  <ul>
 	    <li>
-	      <a href="#" class="item-link list-button" id="takephotoList_btn">Take Photo</a>
+	      <a href="#" class="item-link list-button" id="takephotoList_btnUpd">Take Photo</a>
 	    </li>
 	    <li>
-	      <a href="#" class="item-link list-button" id="photoLibrary_btn">Photo Library</a>
+	      <a href="#" class="item-link list-button" id="photoLibrary_btnUpd">Photo Library</a>
 	    </li>
 	    </ul>
 	    <ul>  
