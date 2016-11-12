@@ -15,18 +15,23 @@
 		<div class="list-block list-block-custom">
 			<ul>
 		    {{#each this.lists}}
-				<li class="back{{this.color}}"><a href="listDetail.html?title={{this.name}}&id={{this.id}}&color={{this.color}}&id={{this.id}}" data-context-name="devices" 
+				<li class="back{{this.color}} swipeout swipeList" idList={{this.id}}><a href="listDetail.html?title={{this.name}}&id={{this.id}}&color={{this.color}}&id={{this.id}}" data-context-name="devices" 
 					class="item-link item-content item-content-custom pippop">
 						<div class="item-media">
-							<i class="icon icon-f7"></i>  
-						</div>
+							<img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
+						</div>  
 						<div class="item-inner">
 							<div class="item-title">{{this.name}}</div>
 						<div class="item-after-custom item-after-custom listLi" id="{{this.id}}">
 								 <i class="fa fa-check-square-o fa-2x fa-check-square-not-all-conn" aria-hidden="true"></i>
 					     </div>
 					 </div>
-				</a></li>
+				</a>
+					<div class="swipeout-actions-right">
+   					 <!-- Add this button and item will be deleted automatically -->
+   				     <a href="#" class="swipeout-delete">Delete</a>
+ 		        </div>
+				</li>
 				{{/each}}
 			</ul>
 		</div>

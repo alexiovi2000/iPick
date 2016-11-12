@@ -15,7 +15,7 @@
 	<div class="list-block list-block-custom">
 		<ul>  
 		{{#each this.devices}}
-			<li class="swipeout" idDevice={{this.id}}><a href="about.html?item={{this.name}}&address={{this.address}}&id={{this.id}}&safetymode={{this.safetymode}}"
+			<li class="swipeout swipeDevice" idDevice={{this.id}}><a href="about.html?item={{this.name}}&address={{this.address}}&id={{this.id}}&safetymode={{this.safetymode}}&battery={{this.battery}}"
 				class="swipeout-content item-link item-content item-content-custom">
 					<div class="item-media">
 						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 

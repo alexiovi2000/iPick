@@ -262,23 +262,30 @@
 #largeImage{
 	display: block;
     margin: 0 auto;
-	width:50%;
-	height:50%;  
+	width:40%;
+	height:40%;  
 	margin-bottom:15px;           
 }
 #largeImageList{
 	display: block;
     margin: 0 auto;
-	width:50%;
-	height:50%;  
+	width:40%;
+	height:40%;  
 	margin-bottom:15px;           
 }
 #largeImageDeviceOption{
 	display: block;
     margin: 0 auto;
-	width:50%;
-	height:50%;  
+	width:40%;
+	height:40%;  
 	margin-bottom:15px;           
+}
+#largeImageListUpd{
+	display: block;
+    margin: 0 auto;
+	width:40%;  
+	height:40%;  
+	margin-bottom:15px;  
 }
 .redColor {
 	background: #c00; 
@@ -367,4 +374,22 @@ content-block-map{
 	background-image: url("/dist/img/PIK_azzurro_small.png");
     height:100%;
 
+}
+.fa-cog{
+	width:5px;
+}
+.fa-battery-full{
+	color:green;
+}
+.fa-battery-empty{
+	color:red;
+}
+.fa-battery-quarter{
+	color:orange;
+}
+.fa-battery-half{
+	color:yellow;
+}
+.battery{
+	margin:0 auto;
 }
