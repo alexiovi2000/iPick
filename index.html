@@ -19,6 +19,7 @@
 <script src="libs/evothings/evothings.js"></script>   
 <script src="libs/evothings/ui/ui.js"></script>
 <script src="libs/jquery/jquery.js"></script>  
+<script src="libs/jquery/jquery.validate.js"></script>  
 </head>
 <body>
      <div class="login-screen">
@@ -35,7 +36,7 @@
                   <div class="item-inner">
                     <div class="item-title label">Username</div>
                     <div class="item-input">
-                      <input type="text" name="username" placeholder="Your username">
+                      <input type="text" id="username_login" name="username" placeholder="Your username">
                     </div>
                   </div>
                 </li>
@@ -43,7 +44,7 @@
                   <div class="item-inner">
                     <div class="item-title label">Password</div>
                     <div class="item-input">
-                      <input type="password" name="password" placeholder="Your password">
+                      <input type="password"  id="password_login" name="password" placeholder="Your password">
                     </div>
                   </div>
                 </li>
@@ -59,27 +60,11 @@
           <form style="display:none" id="registration_id">
             <div class="list-block">
               <ul>
-                 <li class="item-content">
-                  <div class="item-inner">
-                    <div class="item-title label">Name</div>
-                    <div class="item-input">
-                      <input type="text" name="username" placeholder="Your name">
-                    </div>
-                  </div>
-                </li>
-                 <li class="item-content">
-                  <div class="item-inner">
-                    <div class="item-title label">Surname</div>
-                    <div class="item-input">
-                      <input type="text" name="username" placeholder="Your surname">
-                    </div>
-                  </div>
-                </li>
                   <li class="item-content">
                   <div class="item-inner">
                     <div class="item-title label">Email</div>
                     <div class="item-input">
-                      <input type="text" name="username" placeholder="Your email">
+                      <input type="email"  id="email_reg" name="email"  type="text" required placeholder="Email">
                     </div>
                   </div>
                 </li>
@@ -87,7 +72,7 @@
                   <div class="item-inner">
                     <div class="item-title label">Username</div>
                     <div class="item-input">
-                      <input type="text" name="username" placeholder="Your username">
+                      <input type="text" name="username" id="username_reg" placeholder="Username">
                     </div>
                   </div>  
                 </li>
@@ -95,7 +80,15 @@
                   <div class="item-inner">
                     <div class="item-title label">Password</div>
                     <div class="item-input">
-                      <input type="password" name="password" placeholder="Your password">
+                      <input type="password" name="password" id="password_reg" minlength="5" placeholder="Password">
+                    </div>
+                  </div>
+                </li>
+                 <li class="item-content">
+                  <div class="item-inner">
+                    <div class="item-title label">Confirm Password</div>
+                    <div class="item-input">
+                      <input type="password" name="confirmpassword" id="password2_reg"  placeholder="Password">
                     </div>
                   </div>
                 </li>
@@ -103,16 +96,15 @@
             </div>
             <div class="list-block">
               <ul>
-                <li><a href="#" class="item-link list-button" id="register_id">Register!</a></li>
+                <li><a href="#" class="item-link list-button" id="register_reg_id">Register!</a></li>
                  <li><a href="#" class="item-link list-button" id="backLogin_id">Back to Login</a></li>
               </ul>
             </div>
           </form>
         </div>
-      </div>
+      </div>   
       
-      
-      
+         
     </div>
    					
   </div>

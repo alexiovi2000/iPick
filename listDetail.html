@@ -1,4 +1,3 @@
-<div class="pages navbar-through toolbar-through">
 <div class="navbar">
   <div class="navbar-inner">
     <div class="left">
@@ -10,28 +9,35 @@
     <div class="center sliding">{{url_query.title}}</div>
     <div class="right">
      <!--  <a href="#" class="link icon-only open-panel"><i class="icon icon-bars"></i></a> -->
+        <a href="settingList.html?listName={{url_query.title}}&color={{url_query.color}}&id={{url_query.id}}"><i class="fa fa-cog" aria-hidden="true"></i>&nbsp;&nbsp;</a>
       <a href="#" class="link open-picker">+</a>
-      <a href="settingList.html?listName={{url_query.title}}&color={{url_query.color}}&id={{url_query.id}}"><i class="fa fa-cog" aria-hidden="true"></i></a>
+    
     </div>
   </div>
 </div>
-	<div data-page="listDetailPage" class="page">
+<div class="pages navbar-through toolbar-through">
+	<div data-page="listDetailPage" class="page">  
 		<div class="page-content">
 			<div class="list-block media-list">
-				<ul id="listDeviceInListId">
+				<ul id="listDeviceInListId">  
 				{{#each this.deviceinlist}}
-			  <li class="chooseDeviceToAddList" id="{{this.id}}">
-			   <div class="item-content">
-					<div class="item-media">
+			  <li class="swipeout swipeListDetail" idDevice="{{this.id}}">  
+			  <a href="about.html?item={{this.name}}&address={{this.address}}&id={{this.id}}&safetymode={{this.safetymode}}&battery={{this.battery}}"
+				class="swipeout-content item-link item-content item-content-custom">
+			    <div class="item-media">
 						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
-					</div>  
+					</div>
 					<div class="item-inner item-inner-custom">  
-					  <div class="item-title-row"> 
-						<div class="item-title item-title-custom">{{this.name}}</div>    
-					</div>  
-				</div>
-				</div> 
-			</li>    
+						<div class="item-title item-title-custom"><b>{{this.name}}</b></div> 
+						<div class="item-after">
+ 						</div>   
+  					</div> 
+				</a>
+				<div class="swipeout-actions-right">
+   					 <!-- Add this button and item will be deleted automatically -->
+   				 <a href="#" class="swipeout-delete">Delete</a>
+ 		    </div>
+			</li>       
 			{{/each}}
 				</ul>   
 
@@ -49,7 +55,7 @@
       <div class="content-block">
        <div class="list-block media-list">
 		<ul>
-		{{#each this.devices}}       
+		{{#each this.deviceNotInList}}       
 			<li class="chooseDeviceToAddList" id="{{this.id}}">
 			   <div class="item-content">
 					<div class="item-media">

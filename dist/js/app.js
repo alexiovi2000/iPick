@@ -8,6 +8,7 @@ var i=false;
 
   
 var app = {
+		deviceType:'',
 		timeStartScanNewDev:'',
 		iPickView:{},
 		db:{},
@@ -95,7 +96,8 @@ var app = {
 								   else{
 									   app.myDevices[i].list = new Array();
 								   }
-							   }   
+							   }  
+							   
 						   }
 						   callback(callback2);    
 						  
@@ -185,11 +187,12 @@ var app = {
 			 this.db.transaction(function(tx){
 				  tx.executeSql('insert into lists (id,name,image,color) values (?,?,?,?)', [obj.id,obj.name,obj.image,obj.color], 
 					 function(tx, results){   
+					  window.location='index.html';      
 					}, app.errorCB);
 			  }, app.errorCB);    
 		},
 		loadFrameworkAndHome:function(){
-			
+			  
 			app.toDataUrl('dist/img/PIK_azzurro_small.png', function(base64Img) {
 				 app.logoInBase64 = base64Img; 
 				});
@@ -207,7 +210,7 @@ var app = {
 						app.iPickView.hidePreloader();    
 					},  
 					template7Data : {
-						'devices' : {'devices':app.myDevices,'lists':app.myLists,'deviceinlist':app.deviceInList}
+						'devices' : {'devices':app.myDevices,'lists':app.myLists,'deviceinlist':app.deviceInList,'deviceNotInList':app.deviceInList}
 					},
 				   preroute: function (view, options) {
 					        if (!localStorage.getItem('tokenPick')) {
@@ -237,14 +240,13 @@ var app = {
 						   }
 						   break;
 						   case 'listDetailPage':{
-						   console.log("qua");
 							   app.numberReloadListPage = 0;
 							   setTimeout(function(){
 								   app.listView.router.load({
 									    url: 'list.html',
 									    animatePages: false,
 									    contextName:'devices',
-									    reload:true
+									    reload:true  
 									});
 								   $$("#logoPickList").prop("src",app.logoInBase64);
 							   },2000);    
@@ -287,6 +289,101 @@ var app = {
 				    		 $$("#loginForm").show();
 							 $$("#registration_id").hide();
 				    	});
+				    	
+                        $$("#register_reg_id").on('click',function(){
+                            var email =   $$("#email_reg").val();
+                            var username =$$("#username_reg").val();
+                            var password =$$("#password_reg").val();
+                            var password2 = $$("#password2_reg").val();
+                        	
+                        	if (!email || !username || !password || !password2){
+                        		app.iPickView.alert("All fields are mandatory","Error");
+                        		return;
+                        	}
+                        	
+				    		if (password.length>20){
+				    			app.iPickView.alert("Password too long","Error Password");
+				    			return;
+				    		}
+				    		
+				    		if (!$("#email_reg").valid()){
+				    			app.iPickView.alert("Please, insert a valid mail address","Error");
+				    			return;
+				    		}
+				    		
+				    		if (password != password2){
+				    			app.iPickView.alert("Password does not match the confirm password","Error");
+				    			return;
+				    		}
+				    		
+				    		
+				    		 app.iPickView.showPreloader();
+					    		cordovaHTTP.post("http://ipicktrack.altervista.org/api/users", {
+					    		    nome: 'name' ,
+					    		    cognome: 'surname',
+					    		    email:email,
+					    		    username:username,
+					    		    password: password
+					    		}, { }, function(response) {
+					    			app.iPickView.hidePreloader();
+					    		       var data = JSON.parse(response.data);
+					    		       if (!data.success){
+					    		    	   app.iPickView.alert(data.msg,"Error Registration User");
+					    		       }
+					    		       else{
+					    		    	   $$("#loginForm").show();
+										   $$("#registration_id").hide();  
+					    		       }
+					    		}, function(response) {
+					    		    // prints 403
+					    		    alert(response.status);
+
+					    		    //prints Permission denied 
+					    		    alert(response.error);
+					    		});
+				    		
+				    		
+                        	
+                        });			    	
+				    	$$("#sign_id").on('click',function(){
+				    		var username = $$("#username_login").val();
+				    		var password = $$("#password_login").val();
+				    		
+				    		if (! username.length){
+				    			app.iPickView.alert("Username empty","Error Username");
+				    			return;
+				    		}
+				    		if (!password.length){
+				    			app.iPickView.alert("Password empty","Error Password");
+				    			return;
+				    		}
+				    		
+				    		if (username.length>20){
+				    			app.iPickView.alert("Username too long","Error Username");
+				    			return;
+				    		}
+				    		if (password.length>20){
+				    			app.iPickView.alert("Password too long","Error Password");
+				    			return;
+				    		}
+				    		 app.iPickView.showPreloader();
+				    		cordovaHTTP.post("http://ipicktrack.altervista.org/api/login", {
+				    		    username: username,
+				    		    password: password 
+				    		}, { }, function(response) {
+				    			app.iPickView.hidePreloader();
+				    		       var data = JSON.parse(response.data);
+				    		       if (!data.success){
+				    		    	   app.iPickView.alert(data.msg,"Error Login");
+				    		       }
+				    		       else{
+				    		    	 localStorage.setItem('tokenPick',data.token);  
+				    		    	 window.location='index.html';     
+				    		       }
+				    		});
+				    		
+				    	});
+				    	
 					 
 					 return;
 				    }
@@ -294,7 +391,7 @@ var app = {
 					 if (!app.myDevices.length){       
 							//app.showMyDevice();      
 						 app.disconnectToDevice();         
-						 app.addNewDevice();     
+						 app.addNewDevice(true);     
 							return;  
 			 		  }    
 					  app.loadHome();   
@@ -323,18 +420,21 @@ var app = {
 				//this.db.transaction(this.dropTables, this.errorCB);
 				//return;
 			    this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome); 
-				
-			      
-		},   
-		successCB:function(){  
+		},    
+		getPhoneGapPath:function() {
+			   var path = window.location.pathname;
+			   path = path.substr( path, path.length - 10 );
+			   return path;
+		},
+		successCB:function(){   
 			 app.db.transaction(app.queryDB, app.errorCB);    
 		},      
 		queryDB:function(tx){  
 			  tx.executeSql('SELECT * FROM devices', [], app.querySuccess, app.errorCB);
 		},
 		querySuccess:function(tx, results){
-		                
-		},  
+		                   
+		},       
 		errorCB:function(err) {
 	        console.log("Error processing SQL: "+JSON.stringify(err));
 	    },
@@ -395,25 +495,34 @@ var app = {
 			   tx.executeSql('delete from DEVICES where id = ? ',[idDevice]),
 		       tx.executeSql('delete from DEVICEINLIST where iddevice = ? ',[idDevice]) 
 		},
+		deleteDeviceInList: function(tx,idDevice){
+			 tx.executeSql('delete from DEVICEINLIST where iddevice = ? ',[idDevice]);
+		},
 		deleteList:function(tx,idList){
 			tx.executeSql('delete from LISTS where id = ? ',[idList]),
 		    tx.executeSql('delete from DEVICEINLIST where idlist = ? ',[idList]) 
 		},         
-		pageInitAbout:function(){
+		pageInitAbout:function(){   
 			  
 			 app.iPickView.onPageInit('about', function (page) {
-				// app.iPickView.showPreloader();
-				// app.viewMain.params.dynamicNavbar = true;
 				 clearInterval(app.intervalHome);  
 				 app.stopStop();
 				 var addressItrackSelected = page.query.address;
 				 //app.connectToDevice(addressItrackSelected);
 				  
 				 app.intervalAbout = setInterval(function(){
-					 var device  = app.devices[addressItrackSelected];  
-					          
-					 device.readRSSI(    
-					   function(rssi){
+				   
+					 var device  = app.devices[addressItrackSelected]; 
+					   console.log(device.deviceHandle);             
+					 evothings.ble.rssi(device.deviceHandle, function(rssi){
+						 console.log("Pipopop");
+					 }, 
+					 function(){
+						 console.log("fiffife");
+					 });
+					 
+       					 
+					 device.readRSSI(function(rssi){
 						   if (rssi<= 0){
 							   	var rssiDist = app.calculateRssiDist(rssi); 
 							   	$$(".row").children('div').removeClass('col-100-big');
@@ -428,7 +537,7 @@ var app = {
 							   	else if(rssiDist<=5000){
 							   		antenna = 3;   
 							   	}
-							   	else if (rssiDist <= 10000){
+							   	else if (rssiDist <= 10000){    
 							   		antenna = 2;  
 							   	}
 							   	else{    
@@ -440,10 +549,9 @@ var app = {
 						 
 					 },
 					 function(fail){
-						 
-					 });
+					 }); 
 					 
-					 
+
 					 
 				 },5000);  
 				 
@@ -477,11 +585,20 @@ var app = {
 				
 				$$("#takephoto_btn").on('click',function(){
 				   app.iPickView.closeModal('.picker-info');
-				   app.openCamera('camera-thmb','largeImageDeviceOption',device,app.setUpdateDeviceFoto);	  
+				   app.openCamera('camera-thmb','largeImageDeviceOption',device,app.setUpdateDeviceFoto,'camera');	  
 				});
+				
+				$$("#photoLibrary_btn").on('click',function(){
+					   app.iPickView.closeModal('.picker-info');
+					   app.openCamera('camera-thmb','largeImageDeviceOption',device,app.setUpdateDeviceFoto,'library');	  
+					}); 
 				
 				$$("#updateDevice").on('click',function(){
 					//if($$("#namePick_id").val() && app.newDeviceFoto){
+						if (!$$("#namePick_id").val()){
+							app.iPickView.alert("Name's pick is mandatory","Error");
+	                		return;
+						}
 						app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"));
 						window.location='index.html';                      
 				});  
@@ -575,10 +692,21 @@ var app = {
 					
 					$$("#takephotoList_btnUpd").on('click',function(){
 					   app.iPickView.closeModal('.picker-info-list');
-					   app.openCamera('camera-thmb','largeImageList','',app.setFotoUpdateList);	  
+					   app.openCamera('camera-thmb','largeImageListUpd','',app.setFotoUpdateList,'camera');   	  
+					});
+					
+					$$("#photoLibrary_btnUpd").on('click',function(){
+						  app.iPickView.closeModal('.picker-info-list');
+						  app.openCamera('camera-thmb','largeImageListUpd','',app.setFotoUpdateList,'library'); 
 					});
 					
 					$$("#saveUpdateList").on('click',function(){
+						
+						if (!$$("#List_id_upd").val()){
+							app.iPickView.alert("Name's list is mandatory","Error");
+                    		return;
+						}
+						
 						app.saveUpdateList(page.query.id,$$("#List_id_upd").val(),colorChoosen);
 						window.location='index.html';              
 				});  
@@ -598,25 +726,24 @@ var app = {
 				 });
 				 
 				 $$('.swipeout.swipeList').on('open', function (e) {
-					 console.log("eja");        
-				   });  
+					 var idList = $$(this).attr('idList')*1;
+				   });    
 				                      
 				   $$('.swipeout.swipeList').on('deleted', function (e) {
 					var idList = $$(this).attr('idList')*1;
 					app.db.transaction( 
 					       function(tx){
-					    	   app.deleteList(tx,idList)
+					    	   app.deleteList(tx,idList);
 					    	   for (var i=0;i<app.myLists.length;i++){
-					    		   if (app.myLists[i].id == idList){
+					    		   if (app.myLists[i] && app.myLists[i].id == idList){
 					    			   app.myLists.splice(i, 1);
-					    			   break;
+					    			   break;   
 					    		   }         
-					    	   }
-					    		$$(this).remove();  
-					    	},      
+					    	   }      
+					    	},         
 					    	this.errorCB);
-				   });   
-				 
+				   });     
+				      
 				 
 				 //app.listView.params.dynamicNavbar = true;
 
@@ -676,7 +803,7 @@ var app = {
 				$$('.close-picker').on('click', function () {
 					  app.iPickView.closeModal('.picker-1');
 					  $$("#toolbar_id").show();    
-				});     
+				});              
 				   
 				var idList = parseInt(page.query.id);
 				
@@ -700,6 +827,17 @@ var app = {
 					  }, app.errorCB);   
 				});    
 				
+				   $$('.swipeout.swipeListDetail').on('deleted', function (e) {
+					var idDevice = $$(this).attr('idDevice')*1;
+					app.db.transaction(
+					       function(tx){
+					    	   app.deleteDeviceInList(tx,idDevice);
+					    	  // app.reloadListDetail(page.query.title,page.query.id,page.query.color);  
+					    	},            
+					    	this.errorCB);
+					app.scanHome();
+					     
+				   });   
 				if (!app.numberReloadListPage){
 				  app.db.transaction(function(tx){   
 					  tx.executeSql('SELECT d.id,d.address,d.image,d.name FROM devices d inner join deviceinlist t on d.id = t.iddevice where t.idlist = ? ', [idList], 
@@ -708,11 +846,30 @@ var app = {
 						   app.deviceInList = new Array();
 						   var resultQuery = new Array();
 						   var len=results.rows.length;  
+						   app.deviceNotInList = JSON.parse(JSON.stringify(app.myDevices));
 						   for (var i=0;i<len;i++){
 							   resultQuery.push(results.rows.item(i));
-						   }  
+							   /**
+							    * questa roba mi serve per non dover far piu comparire 
+							    * nell'add device in lista, quelli gia aggiunti, 
+							    * poi ristabilisco l'ordine naturale delle cose quando di clicca su "back"
+ 							    *   
+							    */
+							   for (var j=0;j<app.deviceNotInList.length;j++){
+								   if (app.deviceNotInList[j].id == results.rows.item(i).id){
+									   console.log(app.deviceNotInList[j].id);
+									   console.log(results.rows.item(i).id);
+									    app.deviceNotInList.splice(j,1);
+								   }
+							   }   
+							   
+						   }    
 						   app.deviceInList = JSON.parse(JSON.stringify(resultQuery));
+						      
+						   
 						   app.iPickView.template7Data.devices.deviceinlist = app.deviceInList;
+						   app.iPickView.template7Data.devices.deviceNotInList = app.deviceNotInList; 
+						   
 				           app.reloadListDetail(page.query.title,page.query.id,page.query.color);  
 						}, app.errorCB);          
 				  }, app.errorCB);        
@@ -744,8 +901,8 @@ var app = {
 		loadLists:function(){
 			if ($.isEmptyObject(app.myLists)){     
 					//app.showMyDevice();            
-					 app.addNewList();   
-					 $$("#add_listId").hide();    
+					 app.addNewList(true);   
+					// $$("#add_listId").hide();    
 					return;  
 			}else{    
 				app.listView.router.load({
@@ -905,7 +1062,7 @@ var app = {
 			//app.disconnectToDevice();  
 		},         
 		      
-		addNewDevice:function (){
+		addNewDevice:function (firstTime){
 			 //$.mobile.changePage("#newDevice",{transition: "slide",  allowSamePageTransition: true,reloadPage: false }); 
 			clearInterval(app.intervalHome);
 			clearInterval(app.intervalConnectionDevice);
@@ -916,6 +1073,9 @@ var app = {
 			$$("#toolbar_id").hide();    
 			   
 			this.iPickView.onPageInit('newDevice', function (page) {
+				if (firstTime){
+					app.viewMain.hideNavbar();
+				}
 				    
 				//$$("#navigationNewDevice").append($$("#navBarListSimple").html())
 			}); 
@@ -938,7 +1098,7 @@ var app = {
 			}
 			app.temporizzatoreCount++;
 		},
-		addNewList: function(){  
+		addNewList: function(firstTime){  
 			app.listView.router.load({
 			    url: 'newList.html',
 			    animatePages: true      
@@ -946,6 +1106,9 @@ var app = {
 			//$$("#toolbar_id").hide();   
 
 			 app.iPickView.onPageInit('newList', function (page) {
+				 if (firstTime){
+					 app.listView.hideNavbar();
+				 }
 				 var colorChoosen = '';
 					$$('#listColorId_input').on('click', function () {
 						  // Check first, if we already have opened picker
@@ -1016,16 +1179,24 @@ var app = {
 					
 					$$("#takephotoList_btn").on('click',function(){
 					   app.iPickView.closeModal('.picker-info-list');
-					   app.openCamera('camera-thmb','largeImageList','',app.setFotoNewList);	  
+					   app.openCamera('camera-thmb','largeImageList','',app.setFotoNewList,'camera');	  
 					});
+					
+					$$("#photoLibrary_btn").on('click',function(){
+						   app.iPickView.closeModal('.picker-info-list');
+						   app.openCamera('camera-thmb','largeImageList','',app.setFotoNewList,'library');	  
+						});
 					
 					$$('#cancelPicker_btn').on('click', function () {
 						app.iPickView.closeModal('.picker-info-list');
 					})
 					
 					$$("#saveNewList").on('click',function(){
+						if (!$$("#List_id").val()){
+							app.iPickView.alert("Name's list is mandatory","Error");
+                    		return;
+						}
 						app.saveNewList($$("#List_id").val(),colorChoosen);
-						window.location='index.html';              
 				});  
 			  });      
 			
@@ -1044,27 +1215,24 @@ var app = {
 		    }
 		    return options;
 		},
-		openCamera:function(selection,div,device,callback) {
-
-		    var srcType = Camera.PictureSourceType.CAMERA;
-		    var options = app.setOptionsCamera(srcType);
-
-		    if (selection == "camera-thmb") {
-		        //options.targetHeight = 100;
-		        //options.targetWidth = 100;
+		openCamera:function(selection,div,device,callback,source) {
+		    var srcType;
+		    if(source == 'camera'){
+		    	srcType = Camera.PictureSourceType.CAMERA;
+		    }else{
+		    	srcType = Camera.PictureSourceType.PHOTOLIBRARY 
 		    }
-		        
-
+		    var options = app.setOptionsCamera(srcType);
+  
 		    navigator.camera.getPicture(function cameraSuccess(imageData) {
 		    	 var image = document.getElementById(div);    
-		    	 image.src =  "data:image/jpeg;base64,"+imageData;    
-		    	callback(imageData);          
-		    	 
+		    	 image.src =  "data:image/jpeg;base64,"+imageData;   
+		       	 callback(imageData);            
 
 		    }, function cameraError(error) {
 		        console.debug("Unable to obtain picture: " + error, "app");
    
-		    }, options);
+		    }, options);      
 		},
 		setFotoNewDevice:function(imageData){
 			app.newDeviceFoto = imageData;
@@ -1175,25 +1343,28 @@ var app = {
 		   
 			if (newDev){
 			  app.timeStartScanNewDev = new Date().getTime();
-			}   
+			}    
+			
+			var serviceUUid = new Array();
+			if (app.deviceType=='iPhone' || app.deviceType=='iPad'){
+				serviceUUid = ['0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb'];
+			}
 			//evothings.ble.startScan(   
 			evothings.easyble.startScan(     
 				function(device){    
-					if (device.hasName('iTrack')){
+					if (device.hasName('PIK')){
 						device.lastSeen = Date.now();
 						device.alerted = false;
-						app.devices[device.address] = device;   
+						app.devices[device.address] = device;
 						app.updateLocalStorageDevice();
 				    }         
 					if (newDev){  
 						app.connectToDevice(true,device);
 					}
-				},      
+				},        
 				function(error)      
 				{     
-					console.log("sti cazzi");  
-				},
-				 { serviceUUIDs: ['0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb'] }
+				}, { serviceUUIDs: serviceUUid }
 			    );
 		    
 		},
@@ -1232,10 +1403,8 @@ var app = {
 			}else{
 				
 			for (var i in app.devices){
-				  
                  var device = app.devices[i];
 				if (device && app.isMyDevice(device.address)  && !device.isConnected()){
-			  
 				device.connect(       
 					function(device)    
 					{       
@@ -1301,7 +1470,8 @@ var app = {
 			device.writeServiceCharacteristic(    
 			   '0000fff0-0000-1000-8000-00805f9b34fb', 
 			    '0000fff4-0000-1000-8000-00805f9b34fb',      
-			     new Uint8Array([161,164,36,164]), // Write password   
+			     new Uint8Array([161,178,195,212]), // Write password   
+			     // new Uint8Array([161,164,36,164]), // Write password   
 			    function()
 			    {    
 				  app.iPickView.hidePreloader();
@@ -1355,6 +1525,8 @@ var app = {
 			});  
 			
 			app.iPickView.onPageInit('newDeviceOption', function (page) {
+				   
+				app.viewMain.showNavbar();
 				
 				$$('#btn_photoid').on('click', function () {  
 					  app.iPickView.pickerModal('.picker-info');
@@ -1367,12 +1539,21 @@ var app = {
 				
 				$$("#takephoto_btn").on('click',function(){
 				   app.iPickView.closeModal('.picker-info');
-				   app.openCamera('camera-thmb','largeImage',device,app.setFotoNewDevice);	  
+				   app.openCamera('camera-thmb','largeImage',device,app.setFotoNewDevice,'camera');	  
 				 
+				});
+				
+				$$("#photoLibrary_btn").on('click',function(){
+					   app.iPickView.closeModal('.picker-info');
+					   app.openCamera('camera-thmb','largeImage',device,app.setFotoNewDevice,'library');	  
 				});
 				
 				$$("#saveNewDevice").on('click',function(){
 					//if($$("#namePick_id").val() && app.newDeviceFoto){
+						if (!$$("#namePick_id").val()){
+							app.iPickView.alert("Name's pick is mandatory","Error");
+	                		return;
+						}
 						app.saveNewDevice(device, $$("#namePick_id").val(), app.newDeviceFoto);
 						window.location='index.html';              
 				});  
@@ -1391,11 +1572,11 @@ var app = {
 		    
 		    if (!app.map){
 	    	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-		          zoom: 15,
+		          zoom: 15/*,
 		          center: {  
 		        	  lat:app.currentPosition.Lat,
 		        	  lng:app.currentPosition.Long
-		          }
+		          }*/
 				});
 	    	  
 		    	  app.map.setCenter({    
@@ -1446,20 +1627,36 @@ var app = {
 			app.updateList(idList,nameList,color);
 		},
 		logClick:function(device){
-			console.log("log click");
 			device.enableServiceNotification(
 			  '0000ffe0-0000-1000-8000-00805f9b34fb',
 			  '0000ffe1-0000-1000-8000-00805f9b34fb',
 			  function(data)  
 			  {  
 			    var res = new Uint8Array(data)[0];
+			    console.log(res);
 			    if (res == 8){
 			    	var address =device.address;
 			    	if (app.devicesRing[address]){
 			    		app.onToggleButton(address);
 			    	}
 			    }    
-			  },
+			    
+			    if (res == 2 && device.DeviceNotification){
+			    	
+			    	if (app.atBackground){
+			    		 cordova.plugins.notification.local.schedule({
+				    			id: app.idNotification,      
+				    		    //sound: "ring.mp3",
+				    		   // sound: "ring.mp3",
+				    			title: 'Pik Call' });           
+						 app.idNotification++; 
+			    	}else{
+			    		var audio = new Audio('ring.mp3');
+				    	audio.play();
+			    	}
+			    }
+			    device.DeviceNotification = true;
+			  },   
 			  function(errorCode)
 			  {
 			    console.log('BLE enableServiceNotification error: ' + errorCode);
@@ -1473,16 +1670,15 @@ var app = {
 			 * diretto fa prima
 			 * se è nuovo leggo il servizio del pairing mode, altrimenti quello dello writepassword
 			 */
-			//if (newDev == true){
-				var serviceUID = [ '0000180f-0000-1000-8000-00805f9b34fb','0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb'];
-			/*}     
-			else{
-				var serviceUID = [' '0000fff0-0000-1000-8000-00805f9b34fb''];
-			}*/
+			
+			var serviceUID = null;
+			if (app.deviceType=='iPhone' || app.deviceType=='iPad'){
+				serviceUID = new Array('0000180f-0000-1000-8000-00805f9b34fb','0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb');
+			}
 			// Read all services.
 			device.readServices(  
-			    serviceUID,     
-				function(device)   
+			     serviceUID,     
+				function(device)  
 				{             
 					if (newDev==true){
 						app.readPairingMode(device);
@@ -1530,6 +1726,7 @@ var app = {
 			   
 };  
 document.addEventListener('deviceready', function(){
+	app.deviceType = (navigator.userAgent.match(/iPad/i))  == "iPad" ? "iPad" : (navigator.userAgent.match(/iPhone/i))  == "iPhone" ? "iPhone" : (navigator.userAgent.match(/Android/i)) == "Android" ? "Android" : (navigator.userAgent.match(/BlackBerry/i)) == "BlackBerry" ? "BlackBerry" : "null";
 	app.initialize();       
 }, false);  
 
