@@ -1176,6 +1176,55 @@ var app = {
 						  app.iPickView.pickerModal('.picker-info-list');
 				    });
 					
+					$$('#btn_iconId').on('click', function () {
+						  // Check first, if we already have opened picker
+						  if ($$('.picker-modal.modal-in').length > 0) {
+							  app.iPickView.closeModal('.picker-modal.modal-in');
+						  }
+						  
+						  
+						  var html = '';
+						  html+='<div height="100" class="picker-modal">' +
+					      '<div class="toolbar">' +
+					        '<div class="toolbar-inner">' +
+					          '<div class="left"></div>' +
+					          '<div class="right"><a href="#" class="close-picker">Close</a></div>' +
+					        '</div>' +
+					      '</div>' +
+					      '<div class="picker-modal-inner">'+
+					      '<div class="content-block">';
+						  html+=  '<div class="row" >';
+						  
+						  for (var i=1;i<=60;i++){
+							  html+= '<div class="col-33 icon_'+i+'"><img width="70" height="40" src="icons/'+i+'.png"></div>';
+							  if (i%3 == 0){
+								  html+=  '</div>';
+								  html+=  '<div class="row">';
+							  }
+							  
+						  }
+						  html+=  '</div></div></div></div>';
+						  app.iPickView.pickerModal(html);
+						  
+						  
+							$$(".col-33").on('click',function(){
+							  var txtClass = $$(this).attr("class").split(" ")[1];
+							  
+							  var iconChoose = txtClass.split("_")[1];
+							  console.log(iconChoose);
+							  app.iPickView.closeModal('.picker-modal.modal-in');
+							  
+							  var url = 'icons/'+iconChoose+'.png';
+							//  var url = 'icons/'+'gigio'+'.png';
+							  
+								app.toDataUrl(url, function(base64Img) {
+									console.log(base64Img);
+									app.setFotoNewList(base64Img.split(",")[1]);
+									document.getElementById('largeImageList').src = url;   
+								});
+							  
+							});
+						});
 					
 					$$("#takephotoList_btn").on('click',function(){
 					   app.iPickView.closeModal('.picker-info-list');
@@ -1743,4 +1792,3 @@ document.addEventListener('resume', function(){
    
         
  
-        
