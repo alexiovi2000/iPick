@@ -391,12 +391,12 @@ var app = {
 					 return;
 				    }
 				
-					 if (!app.myDevices.length){       
+					/* if (!app.myDevices.length){       
 							//app.showMyDevice();      
 						 app.disconnectToDevice();         
 						 app.addNewDevice(true);     
 							return;  
-			 		  }    
+			 		  }*/    
 					  app.loadHome();   
 					  app.setIntervalConnectDevice();
 					  app.devicesRing = new Array();
@@ -1069,12 +1069,12 @@ var app = {
 						  
 		},
 		loadLists:function(){
-			if ($.isEmptyObject(app.myLists)){     
+			/*if ($.isEmptyObject(app.myLists)){     
 					//app.showMyDevice();            
 					 app.addNewList(true);   
 					// $$("#add_listId").hide();    
 					return;  
-			}else{    
+			}else{   */ 
 				app.listView.router.load({
 				    url: 'list.html',   
 				    animatePages: false,
@@ -1082,7 +1082,7 @@ var app = {
 				});     
 				app.pageInitList();
 				app.pageInitListDetail();    
-			}  
+			//}  
 			     
 		},    
 		loadMap:function(){
