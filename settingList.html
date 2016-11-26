@@ -33,7 +33,7 @@
           <div class="item-inner"  id="listColorId_inputUpd">
           	<div class="item-title label">Color's List</div>   
           		<div class="item-input">
-            		<div class="create-picker" style="background:{{url_query.color}};" placeholder="Choose Color">&nbsp;</div>
+            		<div class="create-picker {{url_query.color}}Color" placeholder="Choose Color">&nbsp;</div>
           	</div>
         </div>
         </div>
@@ -44,7 +44,7 @@
           <div class="item-title label">Image</div>
          <div class="item-input">
         <p class="buttons-row">
-			  <a href="#" class="button">Icon</a>
+			  <a href="#" class="button" id="btn_iconListUpd">Icon</a>
 			  <a href="#" class="button" id="btn_photoListidUpd">Photo</a>
 		</p>
          </div>
@@ -54,7 +54,7 @@
     </ul>       
     </form>
      </div>     
-    <div class="content-block">     
+    <div class="content-block" >     
          <img id="largeImageListUpd" src="" />      
         <a href="#" id="saveUpdateList" class="button button-big button-round active">Save</a>
     </div>

@@ -14,12 +14,12 @@
 <div class="page-content">
 	<div class="list-block list-block-custom">
 		<ul>  
-		{{#each this.devices}}
-			<li class="swipeout swipeDevice" idDevice={{this.id}}><a href="about.html?item={{this.name}}&address={{this.address}}&id={{this.id}}&safetymode={{this.safetymode}}&battery={{this.battery}}"
+	  	 {{#each this.devices}}
+			<li class="swipeout swipeDevice" idDevice={{this.id}}><a href="about{{this.connected}}.html?item={{this.name}}&address={{this.address}}&id={{this.id}}&safetymode={{this.safetymode}}&battery={{this.battery}}"
 				class="swipeout-content item-link item-content item-content-custom">
 					<div class="item-media">
 						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
-					</div>
+					</div>      
 					<div class="item-inner item-inner-custom">  
 					<span class="badge {{this.connected}}"></span>
 						<div class="item-title item-title-custom"><b>{{this.name}}</b></div>    
@@ -31,11 +31,10 @@
 					</div>
 			</a>   
 			<div class="swipeout-actions-right">
-   					 <!-- Add this button and item will be deleted automatically -->
    				 <a href="#" class="swipeout-delete">Delete</a>
  		    </div>
 			</li>   
-	    {{/each}}  
+	    {{/each}}
 		</ul>
 	</div>
 </div>

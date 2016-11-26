@@ -15,7 +15,7 @@
 		<div class="list-block list-block-custom">
 			<ul>
 		    {{#each this.lists}}
-				<li class="back{{this.color}} swipeout swipeList" idList={{this.id}}><a href="listDetail.html?title={{this.name}}&id={{this.id}}&color={{this.color}}&id={{this.id}}" data-context-name="devices" 
+				<li class="{{this.color}}Color swipeout swipeList" idList={{this.id}}><a href="listDetail.html?title={{this.name}}&id={{this.id}}&color={{this.color}}&id={{this.id}}" data-context-name="devices" 
 					class="item-link item-content item-content-custom pippop">
 						<div class="item-media">
 							<img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
