@@ -22,7 +22,6 @@ var app = {
 		intervalHome:'',
 		intervalAbout:'',
 		intervalPause:'',
-		intervalConnectionDevice:'',
 		atBackground:'',
 		newDeviceFoto:{},     
 		newListFoto:{},
@@ -225,12 +224,14 @@ var app = {
 						   case 'about':
 						   {     
 							   clearInterval(app.intervalAbout);
+							   setIntervalConnectDevice();
 							   app.scanHome();  
 						   }    
 						   break;
 						   case 'mapPageNotConnected':
 						   {     
 							   clearInterval(app.intervalAbout);
+							   setIntervalConnectDevice();
 							   app.scanHome();  
 						   }    
 						   break;
@@ -239,7 +240,6 @@ var app = {
 								clearInterval(app.intervalTemporizzatore);
 								app.stopStop();
 								app.scanHome();    
-								app.setIntervalConnectDevice();
 						   }
 						   break;
 						   case 'listDetailPage':{
@@ -265,7 +265,6 @@ var app = {
 						}
 						   
 					}
-					 
 
 				});
 			  
@@ -371,6 +370,8 @@ var app = {
 				    			return;
 				    		}
 				    		 app.iPickView.showPreloader();
+				    		 //localStorage.setItem('tokenPick','2321312312321');  
+		    		    	 //window.location='index.html';
 				    		cordovaHTTP.post("http://ipicktrack.altervista.org/api/login", {
 				    		    username: username,
 				    		    password: password 
@@ -390,15 +391,14 @@ var app = {
 				    	
 					 return;
 				    }
-				
-					/* if (!app.myDevices.length){       
+					 if (!app.myDevices.length){       
 							//app.showMyDevice();      
 						 app.disconnectToDevice();         
 						 app.addNewDevice(true);     
 							return;  
-			 		  }*/    
+			 		  }    
 					  app.loadHome();   
-					  app.setIntervalConnectDevice();
+					 // app.setIntervalConnectDevice();
 					  app.devicesRing = new Array();
 					  app.newDeviceFoto = {};
 					  app.loadLists();
@@ -470,7 +470,6 @@ var app = {
 					  var idDevice = $$(this).attr('idDevice');
 					 clearInterval(app.intervalHome);
 					 clearInterval(app.intervalPosition)
-					 clearInterval(app.intervalConnectionDevice);
 				   });  
 				    
 				  $$('.swipeout.swipeDevice').on('closed', function (e) {
@@ -518,7 +517,6 @@ var app = {
 			 app.iPickView.onPageInit('mapPageNotConnected', function (page) {
 				 clearInterval(app.intervalHome);  
 				 clearInterval(app.intervalPosition)
-				 clearInterval(app.intervalConnectionDevice);
 				 app.stopStop();  
 		         var addressItrackSelected = page.query.address;
 					  //  if (!app.mapDevice){
@@ -572,7 +570,6 @@ var app = {
 			  
 			 app.iPickView.onPageInit('about', function (page) {
 				 clearInterval(app.intervalHome);  
-				 clearInterval(app.intervalConnectionDevice);
 				 clearInterval(app.intervalPosition)
 				 app.stopStop();
 				 var addressItrackSelected = page.query.address;
@@ -1220,27 +1217,18 @@ var app = {
 			      
 			  app.intervalPositionFn(); 
 		},       
-		setIntervalConnectDevice: function(){
-			app.intervalConnectionDevice = setInterval(function(){
-				app.connectToDevice(false);  
-			},3000);
-		},    
 		intervalPositionFn:function(){
 			  app.intervalPosition = setInterval(function(){
 				  app.getCurrentPosition();
 			  },15000);       
 		},  
 		stopStop:function(){
-			//app.updateConnectionDeviceNotFound();
 			evothings.easyble.stopScan();  
-			//app.disconnectToDevice();  
 		},         
 		      
 		addNewDevice:function (firstTime){
-			 //$.mobile.changePage("#newDevice",{transition: "slide",  allowSamePageTransition: true,reloadPage: false }); 
 			clearInterval(app.intervalHome);
 			clearInterval(app.intervalPosition);
-			clearInterval(app.intervalConnectionDevice);
 		 	this.viewMain.router.load({
 			    url: 'newDevice.html',  
 			    animatePages: true      
@@ -1527,37 +1515,39 @@ var app = {
 		alertDeviceConnectionLost:function(address){ 
 		      
 			 for (var dev in app.myDevices){
-				 if (app.myDevices[dev].address == address && !app.devices[address].alerted){
-				 app.devices[address].alerted = true;
-				 app.myDevices[dev].lastUpdate = Date.now();
-				 if (app.currentPosition){     
-					 var lat =  app.currentPosition.Lat;
-					 app.myDevices[dev].lat = app.currentPosition.Lat ;
-					 app.myDevices[dev].long = app.currentPosition.Long ;
-					 var now = Date.now();
-					 var id = app.myDevices[dev].id;
-					 app.db.transaction(function(tx){
-					  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
-						 function(tx, results){  
-						}, app.errorCB);  
-					   }); 
-				 }      
-				    
+				 if (app.myDevices[dev].address == address){
+					 app.myDevices[dev].connected = 'notconnected';  
+					if (!app.devices[address].alerted){
+							 app.devices[address].alerted = true;
+							 app.myDevices[dev].lastUpdate = Date.now();
+							 if (app.currentPosition){     
+								 var lat =  app.currentPosition.Lat;
+								 app.myDevices[dev].lat = app.currentPosition.Lat ;
+								 app.myDevices[dev].long = app.currentPosition.Long ;
+								 var now = Date.now();
+								 var id = app.myDevices[dev].id;
+								 app.db.transaction(function(tx){
+								  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
+									 function(tx, results){  
+									}, app.errorCB);  
+								   }); 
+							 }      
+							    
+							 
+							 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
+								 cordova.plugins.notification.local.schedule({
+						    			id: app.idNotification,
+						    			sound: "ring.mp3",
+						    			title: app.myDevices[dev].name });
+								 app.idNotification++; 
+							 }else{
+								 if (app.myDevices[dev].safetymode=="checked"){
+									 var audio = new Audio('ring.mp3');
+								      audio.play();
+								 }
+							 }
 				 
-				 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
-					 cordova.plugins.notification.local.schedule({
-			    			id: app.idNotification,
-			    			sound: "ring.mp3",
-			    			title: app.myDevices[dev].name });
-					 app.idNotification++; 
-				 }else{
-					 if (app.myDevices[dev].safetymode=="checked"){
-						 var audio = new Audio('ring.mp3');
-					      audio.play();
-					 }
-				 }
-				 
-				 app.myDevices[dev].connected = 'notconnected';  
+					}
 			  }	   
 		 }        
 		},  
@@ -1592,10 +1582,12 @@ var app = {
 						device.lastSeen = Date.now();
 						device.alerted = false;
 						app.devices[device.address] = device;
-						app.updateLocalStorageDevice();
 				    }         
 					if (newDev){  
 						app.connectToDevice(true,device);
+					}
+					else{
+						app.connectToDevice(false,device);
 					}
 				},        
 				function(error)      
@@ -1638,31 +1630,24 @@ var app = {
 				
 			}else{
 				
-			for (var i in app.devices){
-                 var device = app.devices[i];
 				if (device && app.isMyDevice(device.address)  && !device.isConnected()){
-				device.connect(       
-					function(device)    
-					{       
-                     
-						app.devices[i].alerted = false;  
-						app.devices[i].connected = 'connected';  
-					    app.updateConnectionDeviceFound(device);
-					    app.readServices(device,false);            
-					},    
-					function(errorCode)   
-					{  
-						//app.setNotConnectedDevice(device);//app.devices[i].connected = 'notconnected';  
-					
-							app.alertDeviceConnectionLost(device.address);
-							delete app.devices[i];  
-							app.showInfo('Error: Connection failed: ' + errorCode + ' and deviceAddress: '+i); 
-					});
-				    
-				}  
-		       }  
-			
-			
+					device.connect(         
+							function(device)    
+							{       
+								app.devices[device.address].alerted = false;  
+								app.devices[device.address].connected = 'connected';  
+							    app.updateConnectionDeviceFound(device);
+							    app.readServices(device,false);   
+							},    
+							function(errorCode)   
+							{  
+								delete app.devices[i];  	
+								app.alertDeviceConnectionLost(device.address);
+								app.stopStop();
+								app.startScan();
+							});     
+				
+				}
 			}
 		},    
 		readBattery: function(device){
@@ -1695,7 +1680,7 @@ var app = {
 					    },
 					    function(errorCode)     
 					    {
-					      alert('BLE writeServiceCharacteristic pass error: ' + errorCode);
+					      //alert('BLE writeServiceCharacteristic pass error: ' + errorCode);
 					    });
 		},
 		writePasswordiTrak: function (device){   
@@ -1711,7 +1696,7 @@ var app = {
 			    },      
 			    function(errorCode)     
 			    {
-			      alert('BLE writeServiceCharacteristic pass error: ' + errorCode);
+			      //alert('BLE writeServiceCharacteristic pass error: ' + errorCode);
 			    });
 		},
 		readPairingMode:function(device){
