@@ -1,0 +1,45 @@
+<!-- We don't need full layout in this file because this page will be parsed with Ajax. It is just enough to put here .navbar and .page-->
+ 
+<!-- Top Navbar-->
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="left">
+      <a href="#" class="back link"> 
+        <i class="icon icon-back"></i>
+        <span>Back</span>
+       </a>
+    </div>
+    <div class="center sliding">{{url_query.item}}</div>
+    <div class="right">
+      <a href="settingDevice.html?name={{url_query.item}}&id={{url_query.id}}&safetymode={{url_query.safetymode}}&battery={{url_query.battery}}"><i class="fa fa-cog" aria-hidden="true"></i></a>
+      <a href="#" class="link icon-only open-panel"><i class="icon icon-bars"></i></a>
+    </div>
+  </div>    
+</div> 
+
+	<div data-page="about" class="page">
+    <div class="page-content">
+      <div class="content-block content-block-single">
+      <div class="row row-single">
+       <div class="col-100">
+         <div class="antenna"></div>
+       </div>
+         <div class="col-100">
+         <div class="antenna"></div>
+       </div>
+         <div class="col-100">
+         <div class="antenna"></div>
+       </div>
+         <div class="col-100 ">
+         <div class="antenna "></div>
+       </div>
+       <div class="col-100">
+         <div class="antenna"></div>
+       </div>
+        <div class="img_bell"><img id="bell_ring" src="Connesso.png"></div> 
+      </div>
+      </div>
+      
+    </div> 
+  </div>
+ 

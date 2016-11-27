@@ -154,7 +154,6 @@
 	padding-top: 10px;
 }
 
-
 .page {
     background: white none repeat scroll 0 0;
 }
@@ -358,10 +357,10 @@ content-block-map{
 .row-single{
 	height:100%;
 }
-       
+          
 #mapDiv{
 	width:100%;
-	height:95%;    
+	height:90%;    
 }
 #mapDivAbout{
 	width:100%;
