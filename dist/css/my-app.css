@@ -370,11 +370,20 @@ content-block-map{
 	height:45%;   
 	width:100%"; 
 }
-
+.login-screen-title img{
+	width:20%;
+}
 #logoPick{
 	background-image: url("/dist/img/PIK_azzurro_small.png");
     height:100%;
 
+}
+#gif_search{
+	width:60%;
+	margin-left:15%;
+}
+#img_new_dev{
+	width:20%;  
 }
 #disc_img{
 	height:80%;

@@ -1506,7 +1506,7 @@ var app = {
 		alertDeviceConnectionLost:function(address){ 
 		      
 			 for (var dev in app.myDevices){
-				 if (app.myDevices[dev].address == address && app.myDevices[dev].last ){
+				 if (app.myDevices[dev].address == address){
 					 app.myDevices[dev].connected = 'notconnected';  
 					if (!app.devices[address].alerted){
 							 app.devices[address].alerted = true;
@@ -1620,12 +1620,10 @@ var app = {
 				});     
 				
 			}else{
-				
 				if (device && app.isMyDevice(device.address)  && !device.isConnected()){
 					device.connect(         
 							function(device)    
 							{       
-								
 								app.devices[device.address].alerted = false;  
 								app.devices[device.address].connected = 'connected';  
 							    app.updateConnectionDeviceFound(device);
