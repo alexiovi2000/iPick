@@ -1,9 +1,32 @@
 .navbar .right {
 	 font-size: 1.5em;
 }
-
+.lblue{
+	background-color: #2398c9; 
+	box-sizing: border-box;
+    color: #fff;
+    display: block;
+    font-size: 13px;
+    height: 15px;
+    line-height: 20px;
+    padding: 0 6px;
+    text-align: center;
+	width: 40px;
+}
+.pink{
+	background-color: #fe96c9; 
+	box-sizing: border-box;
+    color: #fff;
+    display: block;
+    font-size: 13px;
+    height: 15px;
+    line-height: 20px;
+    padding: 0 6px;
+    text-align: center;
+	width: 40px;
+}
 .blue{
-	background-color: rgba(51, 102, 255, 0.6);
+	background-color: #003366;
     box-sizing: border-box;
     color: #fff;
     display: block;
@@ -30,7 +53,7 @@
 	
 }
 .green{
-    background-color: rgba(0,255,0,0.6);
+    background-color:  #64ca45;
     box-sizing: border-box;
     color: #fff;
     display: block;
@@ -43,7 +66,7 @@
 	
 }
 .red{
-    background-color:  #ff0000;
+    background-color:  #fd6366;
     box-sizing: border-box;
     color: #fff;
     display: block;
@@ -69,7 +92,18 @@
 	width: 40px;
 	
 }
-
+.orange{
+	background-color: #fc9526; 
+	box-sizing: border-box;
+    color: #fff;
+    display: block;
+    font-size: 13px;
+    height: 15px;
+    line-height: 20px;
+    padding: 0 6px;
+    text-align: center;
+	width: 40px;
+}
 .viola{
 	/*background-color: rgba(0,255,0,0.6);*/
 	background-color: #cc73e1;

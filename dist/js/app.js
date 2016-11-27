@@ -1013,7 +1013,10 @@ var app = {
 						   var resultQuery = new Array();
 						   var len=results.rows.length;  
 						   app.deviceNotInList = JSON.parse(JSON.stringify(app.myDevices));
+						   var result = new Array();
 						   for (var i=0;i<len;i++){
+							   
+							   
 							   resultQuery.push(results.rows.item(i));
 							   /**
 							    * questa roba mi serve per non dover far piu comparire 
@@ -1023,13 +1026,16 @@ var app = {
 							    */
 							   for (var j=0;j<app.deviceNotInList.length;j++){
 								   if (app.deviceNotInList[j].id == results.rows.item(i).id){
+									    result.push(app.deviceNotInList[j]);
 									    app.deviceNotInList.splice(j,1);
+									    result.push()
 								   }
 							   }   
 							   
 						   }    
-						   app.deviceInList = JSON.parse(JSON.stringify(resultQuery));
-						      
+						   
+						   app.deviceInList = JSON.parse(JSON.stringify(result));
+						
 						   
 						   app.iPickView.template7Data.devices.deviceinlist = app.deviceInList;
 						   app.iPickView.template7Data.devices.deviceNotInList = app.deviceNotInList; 
