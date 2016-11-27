@@ -394,16 +394,16 @@ content-block-map{
 	width:5px;
 }
 .fa-battery-full{
-	color:green;
+	color:#4285f4;
 }
 .fa-battery-empty{
 	color:red;
 }
 .fa-battery-quarter{
-	color:orange;
+	color:#4285f4;
 }
 .fa-battery-half{
-	color:yellow;
+	color:#4285f4;
 }
 .battery{
 	margin:0 auto;

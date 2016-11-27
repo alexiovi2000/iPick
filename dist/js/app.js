@@ -21,12 +21,12 @@ var app = {
 		devicesRing:{},
 		intervalHome:'',
 		intervalAbout:'',
-		intervalPause:'',
+		intervalPause:'',   
 		atBackground:'',
 		newDeviceFoto:{},     
 		newListFoto:{},
 		updateDeviceFoto:{},
-		deviceSelected:{},  
+		deviceSelected:{},    
 		deviceInList:[],
 		pictureSource: '' ,  
 		map:null,
@@ -336,11 +336,7 @@ var app = {
 										   $$("#registration_id").hide();  
 					    		       }
 					    		}, function(response) {
-					    		    // prints 403
-					    		    alert(response.status);
-
-					    		    //prints Permission denied 
-					    		    alert(response.error);
+					    			app.iPickView.alert("Network Error","Error");
 					    		});
 				    		
 				    		
@@ -383,6 +379,8 @@ var app = {
 				    		    	 localStorage.setItem('tokenPick',data.token);  
 				    		    	 window.location='index.html';     
 				    		       }
+				    		},function(){
+				    			app.iPickView.alert("Network Error","Error");
 				    		});
 				    		
 				    	});
@@ -398,7 +396,7 @@ var app = {
 					  app.loadHome();   
 					 // app.setIntervalConnectDevice();
 					  app.devicesRing = new Array();
-					  app.newDeviceFoto = {};
+					  app.newDeviceFoto = '';
 					  app.loadLists();
 					  app.loadMap();
 					  app.initMap();
@@ -427,6 +425,14 @@ var app = {
 					window.location='index.html';   
 				});
 				
+				bluetoothSerial.isEnabled(
+					    function() {
+					    	
+					    },
+					    function() {
+					    	app.iPickView.alert("Please, active Bluetooth to use app","Bluetooth is not enabled");
+					    }
+				  );
 			    this.getMyDevice(this.getMyLists,this.loadFrameworkAndHome); 
 		},    
 		getPhoneGapPath:function() {
@@ -1664,6 +1670,7 @@ var app = {
 					      for (var i=0;i<app.myDevices.length;i++ ){
 					    	  if (app.myDevices[i].address == device.address){
 					    		  app.myDevices[i].battery = battery;
+					    		  app.myDevices[i].battPerc = batt;
 					    	  }
 					      }
 					      
@@ -1727,7 +1734,7 @@ var app = {
 			app.iPickView.onPageInit('newDeviceOption', function (page) {
 				   
 				app.viewMain.showNavbar();
-				
+				app.newDeviceFoto='';
 				$$('#btn_photoid').on('click', function () {  
 					  app.iPickView.pickerModal('.picker-info');
 					});
@@ -1807,6 +1814,7 @@ var app = {
 						
 						if (!app.newDeviceFoto){
 							app.iPickView.alert("Image or Icon is Mandatory","Error");
+							return;
 						}
 						
 						app.saveNewDevice(device, $$("#namePick_id").val(), app.newDeviceFoto);
@@ -1826,12 +1834,9 @@ var app = {
 		       };
 		    
 		    if (!app.map){
+		    	
 	    	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-		          zoom: 15/*,
-		          center: {  
-		        	  lat:app.currentPosition.Lat,
-		        	  lng:app.currentPosition.Long
-		          }*/
+		          zoom: 15
 				});
 	    	  
 		    	  app.map.setCenter({    
@@ -1842,11 +1847,9 @@ var app = {
 		    }
 				app.setMarkerDevices();
 	    	
-	    	
-	     //  app.renderMap();
 		},
 		onMapError:function(){
-			return '';
+			app.iPickView.alert("Please Active GPS to see the map","Error");
 		},
 		saveNewDevice:function(device,nameDevice,imageDevice){
 		  app.setMyDevice(device.address,nameDevice,imageDevice);
