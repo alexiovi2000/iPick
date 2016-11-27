@@ -224,14 +224,12 @@ var app = {
 						   case 'about':
 						   {     
 							   clearInterval(app.intervalAbout);
-							   setIntervalConnectDevice();
 							   app.scanHome();  
 						   }    
 						   break;
 						   case 'mapPageNotConnected':
 						   {     
 							   clearInterval(app.intervalAbout);
-							   setIntervalConnectDevice();
 							   app.scanHome();  
 						   }    
 						   break;
@@ -578,14 +576,15 @@ var app = {
 				 app.intervalAbout = setInterval(function(){
 				   
 					 var device  = app.devices[addressItrackSelected]; 
-					   console.log(device.deviceHandle);             
 					 evothings.ble.rssi(device.deviceHandle, function(rssi){
+						 console.log("rsssi: "+rssi);
 					 }, 
 					 function(){
 						 console.log("fiffife");
 					 });
 					 
 					 device.readRSSI(function(rssi){
+						 console.log("e sti cazzi");
 						   if (rssi<= 0){
 							   	var rssiDist = app.calculateRssiDist(rssi); 
 							   	$$(".row").children('div').removeClass('col-100-big');

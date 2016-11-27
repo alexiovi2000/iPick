@@ -365,12 +365,22 @@ content-block-map{
 }
 #mapDivAbout{
 	width:100%;
-	height:95%;    
+	height:45%;    
 }
+#img_pick_disconnected{
+	height:45%;   
+	width:100%"; 
+}
+
 #logoPick{
 	background-image: url("/dist/img/PIK_azzurro_small.png");
     height:100%;
 
+}
+#disc_img{
+	height:80%;
+	margin-top:10px;
+	margin-left:25%;
 }
 .fa-cog{
 	width:5px;
