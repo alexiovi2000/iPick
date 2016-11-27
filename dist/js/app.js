@@ -576,13 +576,6 @@ var app = {
 				 app.intervalAbout = setInterval(function(){
 				   
 					 var device  = app.devices[addressItrackSelected]; 
-					 evothings.ble.rssi(device.deviceHandle, function(rssi){
-						 console.log("rsssi: "+rssi);
-					 }, 
-					 function(){
-						 console.log("fiffife");
-					 });
-					 
 					 device.readRSSI(function(rssi){
 						 console.log("e sti cazzi");
 						   if (rssi<= 0){
@@ -1219,7 +1212,7 @@ var app = {
 		intervalPositionFn:function(){
 			  app.intervalPosition = setInterval(function(){
 				  app.getCurrentPosition();
-			  },15000);       
+			  },30000);       
 		},  
 		stopStop:function(){
 			evothings.easyble.stopScan();  
@@ -1483,9 +1476,8 @@ var app = {
 					 }  
 					 if (app.currentPosition){   
 						 var lat =  app.currentPosition.Lat+j;
-						 app.myDevices[i].lat = app.currentPosition.Lat ;
-						 app.myDevices[i].long = app.currentPosition.Long ;
-						
+						 app.myDevices[i].lat = JSON.parse(JSON.stringify(app.currentPosition.Lat)) ;
+						 app.myDevices[i].long = JSON.parse(JSON.stringify(app.currentPosition.Long)) ;
 						 var id = app.myDevices[i].id;
 						 app.db.transaction(function(tx){
 						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,id], 
@@ -1514,7 +1506,7 @@ var app = {
 		alertDeviceConnectionLost:function(address){ 
 		      
 			 for (var dev in app.myDevices){
-				 if (app.myDevices[dev].address == address){
+				 if (app.myDevices[dev].address == address && app.myDevices[dev].last ){
 					 app.myDevices[dev].connected = 'notconnected';  
 					if (!app.devices[address].alerted){
 							 app.devices[address].alerted = true;
@@ -1526,7 +1518,7 @@ var app = {
 								 var now = Date.now();
 								 var id = app.myDevices[dev].id;
 								 app.db.transaction(function(tx){
-								  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
+								  tx.executeSql('update devices set lat = ? , long = ? , ,last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
 									 function(tx, results){  
 									}, app.errorCB);  
 								   }); 
@@ -1633,6 +1625,7 @@ var app = {
 					device.connect(         
 							function(device)    
 							{       
+								
 								app.devices[device.address].alerted = false;  
 								app.devices[device.address].connected = 'connected';  
 							    app.updateConnectionDeviceFound(device);
@@ -1723,13 +1716,6 @@ var app = {
 			    {  
 			      console.log('Pairing mode value error: ' + errorCode);  
 			    });
-		},
-		setNotConnectedDevice: function(device){
-			for (var i=0;i<app.myDevices.length;i++){
-				if (app.myDevices[i].address == device.address){
-					app.myDevices[i].connected = 'notconnected';
-				}
-			}
 		},
 		
 		chooseOptionsNewDevice: function(device){
@@ -1950,7 +1936,25 @@ var app = {
 			device.readServices(  
 			     serviceUID,     
 				function(device)  
-				{             
+				{         
+			    	 
+
+			    	 evothings.ble.rssi(
+			    	     device,
+			    	     function(rssi)
+			    	     {
+			    	       console.log('rssi: ' + rssi);
+			    	     },
+			    	     function(errorCode)
+			    	     {
+			    	       console.log('rssi error: ' + errorCode);
+			    	     });
+
+
+			    	 
+			    	 
+			    	 
+			    	 
 					if (newDev==true){
 						app.readPairingMode(device);
 					}
