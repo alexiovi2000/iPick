@@ -336,6 +336,7 @@ var app = {
 										   $$("#registration_id").hide();  
 					    		       }
 					    		}, function(response) {
+					    			app.iPickView.hidePreloader();
 					    			app.iPickView.alert("Network Error","Error");
 					    		});
 				    		
@@ -380,6 +381,7 @@ var app = {
 				    		    	 window.location='index.html';     
 				    		       }
 				    		},function(){
+				    			app.iPickView.hidePreloader();
 				    			app.iPickView.alert("Network Error","Error");
 				    		});
 				    		

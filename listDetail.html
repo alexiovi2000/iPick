@@ -22,7 +22,7 @@
 				<ul id="listDeviceInListId">  
 				{{#each this.deviceinlist}}
 			  <li class="swipeout swipeListDetail" idDevice="{{this.id}}">  
-			  <a href="about.html?item={{this.name}}&address={{this.address}}&id={{this.id}}&safetymode={{this.safetymode}}&battery={{this.battery}}"
+			  <a href="about{{this.connected}}.html?item={{this.name}}&address={{this.address}}&id={{this.id}}&safetymode={{this.safetymode}}&battery={{this.battery}}&battPerc={{this.battPerc}}"
 				class="swipeout-content item-link item-content item-content-custom">
 			    <div class="item-media">
 						  <img class="img-custom" src="data:image/jpeg;base64,{{this.image}}"/> 
