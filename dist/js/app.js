@@ -583,7 +583,6 @@ var app = {
 				   
 					 var device  = app.devices[addressItrackSelected]; 
 					 device.readRSSI(function(rssi){
-						 console.log("e sti cazzi");
 						   if (rssi<= 0){
 							   	var rssiDist = app.calculateRssiDist(rssi); 
 							   	$$(".row").children('div').removeClass('col-100-big');
@@ -604,7 +603,7 @@ var app = {
 							   	else{    
 							   		antenna = 1;  
 							   	}  
-							   	$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
+							  	$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
 							   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
 						   }
 						 
@@ -945,7 +944,7 @@ var app = {
 									   listLi.children('i').removeClass('fa-check-square-all-conn');
 								   }  
 								   else{
-									   app.iPickView.alert("You have taken everything!");
+									   app.iPickView.alert("You have taken everything!","Info");
 									   listLi.children('i').removeClass('fa-check-square-not-all-conn');
 									   listLi.children('i').addClass('fa-check-square-all-conn');
 								   }   
@@ -1938,24 +1937,7 @@ var app = {
 			     serviceUID,     
 				function(device)  
 				{         
-			    	 
-
-			    	 evothings.ble.rssi(
-			    	     device,
-			    	     function(rssi)
-			    	     {
-			    	       console.log('rssi: ' + rssi);
-			    	     },
-			    	     function(errorCode)
-			    	     {
-			    	       console.log('rssi error: ' + errorCode);
-			    	     });
-
-
-			    	 
-			    	 
-			    	 
-			    	 
+			    	
 					if (newDev==true){
 						app.readPairingMode(device);
 					}
