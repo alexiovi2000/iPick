@@ -12,6 +12,7 @@ var app = {
 		iPickView:{},
 		db:{},
 		viewMain:{},
+		username:'',
 		listView:{},
 		mapView:{},
 		devices:[],
@@ -266,7 +267,11 @@ var app = {
 
 				});
 			  
-			      Template7.registerHelper('if_equals', function(a, b, options){ if (a == b) return options.fn(this); else return options.inverse(this); });
+			  
+			     $$("#info_id").on('click',function(){
+			    	app.iPickView.pickerModal('.picker-infopik');
+				 });
+			      
 				  app.listView = app.iPickView.addView('.view-list',{
 					  dynamicNavbar:true
 				  });  
@@ -277,7 +282,10 @@ var app = {
 					  dynamicNavbar:true
 				  });
 
-				  
+					if (localStorage.getItem('usernamePiK')){
+						var username = localStorage.getItem('usernamePiK');
+					    $("#logout_id").html('Logout '+username);
+					}
 				    if (!localStorage.getItem('tokenPick')){
 				    	app.iPickView.loginScreen();
 				    	
@@ -307,10 +315,10 @@ var app = {
 				    			return;
 				    		}
 				    		
-				    		if (!$("#email_reg").valid()){
+				    	/*	if (!$("#email_reg").valid()){
 				    			app.iPickView.alert("Please, insert a valid mail address","Error");
 				    			return;
-				    		}
+				    		}*/
 				    		
 				    		if (password != password2){
 				    			app.iPickView.alert("Password does not match the confirm password","Error");
@@ -378,6 +386,7 @@ var app = {
 				    		       }
 				    		       else{
 				    		    	 localStorage.setItem('tokenPick',data.token);  
+				    		    	 localStorage.setItem('usernamePiK',username);
 				    		    	 window.location='index.html';     
 				    		       }
 				    		},function(){
@@ -421,7 +430,6 @@ var app = {
 				this.db.transaction(this.populateDB, this.errorCB);
 				//this.db.transaction(this.dropTables, this.errorCB);
 				//return;
-				
 				$$("#logout_id").on('click',function(){  
 					localStorage.setItem('tokenPick','');
 					window.location='index.html';   
@@ -590,23 +598,29 @@ var app = {
 							   	$$(".row").children('div').removeClass('col-100-big');
 							   	$$(".row").children('div').children('div').removeClass('antenna-big');
 							   	var antenna = 1;
-							   	if (rssiDist<=300){
+							   	if (rssiDist<=1000){  
 							   		antenna = 5;
 							   	}    
-							   	else if (rssiDist<=2000){
+							   	else if (rssiDist<=5000){
 							   		antenna = 4;
 							   	}
-							   	else if(rssiDist<=5000){
+							   	else if(rssiDist<=8000){
 							   		antenna = 3;   
-							   	}
-							   	else if (rssiDist <= 10000){    
+							   	}   
+							   	else if (rssiDist <= 15000){    
 							   		antenna = 2;  
 							   	}
 							   	else{    
 							   		antenna = 1;  
 							   	}  
-							  	$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
+							   	
 							   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
+							  	if (antenna==1){
+							  		$$($$( ".row div:nth-child(1)")).children('div').css("margin","0 auto");
+							  	}
+							  	else{
+							  		$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
+							  	}
 						   }
 						 
 					 },
@@ -1071,12 +1085,7 @@ var app = {
 						  
 		},
 		loadLists:function(){
-			/*if ($.isEmptyObject(app.myLists)){     
-					//app.showMyDevice();            
-					 app.addNewList(true);   
-					// $$("#add_listId").hide();    
-					return;  
-			}else{   */ 
+		
 				app.listView.router.load({
 				    url: 'list.html',   
 				    animatePages: false,
@@ -1218,7 +1227,7 @@ var app = {
 					});            
 				   $$("#logoPick").prop("src",app.logoInBase64);
 				  //app.updateConnectionDeviceNotFound();
-			  },2000);      
+			  },1000);      
 			      
 			  app.intervalPositionFn(); 
 		},       
@@ -1677,7 +1686,7 @@ var app = {
 					      for (var i=0;i<app.myDevices.length;i++ ){
 					    	  if (app.myDevices[i].address == device.address){
 					    		  app.myDevices[i].battery = battery;
-					    		  app.myDevices[i].battPerc = batt;
+					    		  app.myDevices[i].battPerc = batt+'%';    
 					    	  }
 					      }
 					      
@@ -1906,14 +1915,13 @@ var app = {
 			    		app.onToggleButton(address);
 			    	}
 			    }    
-			    
 			    if (res == 2 /*&& device.DeviceNotification*/){
 			    	
 			    	if (app.atBackground){
 			    		 cordova.plugins.notification.local.schedule({
 				    			id: app.idNotification,      
 				    		    //sound: "ring.mp3",
-				    		    sound: "ring.mp3",
+				    		    sound: 'file:/'+app.directory+"ring.mp3",
 				    			title: 'Pik Call' });           
 						 app.idNotification++; 
 			    	}else{
@@ -1993,6 +2001,8 @@ var app = {
 };  
 document.addEventListener('deviceready', function(){
 	app.deviceType = (navigator.userAgent.match(/iPad/i))  == "iPad" ? "iPad" : (navigator.userAgent.match(/iPhone/i))  == "iPhone" ? "iPhone" : (navigator.userAgent.match(/Android/i)) == "Android" ? "Android" : (navigator.userAgent.match(/BlackBerry/i)) == "BlackBerry" ? "BlackBerry" : "null";
+	var loc = window.location.pathname;
+	app.directory = loc.substring(0, loc.lastIndexOf('/'))+'/';
 	app.initialize();       
 }, false);  
 
