@@ -597,7 +597,7 @@ var app = {
 							   	var rssiDist = app.calculateRssiDist(rssi); 
 							   	$$(".row").children('div').removeClass('col-100-big');
 							   	$$(".row").children('div').children('div').removeClass('antenna-big');
-							   	var antenna = 1;
+							   	var antenna = '';
 							   	if (rssiDist<=1000){  
 							   		antenna = 5;
 							   	}    
@@ -610,17 +610,18 @@ var app = {
 							   	else if (rssiDist <= 15000){    
 							   		antenna = 2;  
 							   	}
-							   	else{    
+							   	else if (rssiDist <= 20000){    
 							   		antenna = 1;  
 							   	}  
-							   	
-							   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
-							  	if (antenna==1){
-							  		$$($$( ".row div:nth-child(1)")).children('div').css("margin","0 auto");
-							  	}
-							  	else{
-							  		$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
-							  	}
+							   	if (antenna){
+								   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
+								  	if (antenna==1){
+								  		$$($$( ".row div:nth-child(1)")).children('div').css("margin","0 auto");
+								  	}
+								  	else{
+								  		$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
+								  	}
+							   	}
 						   }
 						 
 					 },
@@ -935,36 +936,34 @@ var app = {
 					$$('.listLi').on('click',function(e){
 						 var listToCheck = $$(this).prop('id')*1;   
 						  //salvo temporaneamente l'href perchè altrimenti mi butta nel dettaglio
-						  var listLi = $$(this);
-						  var aParents = $$(this).parents( "a" );
-						  var href = aParents.attr("href");
+						  app.listLi = $$(this);
+						  app.aParents = $$(this).parents( "a" );
+						  app.href = app.aParents.attr("href");
 						  $$(this).parents( "a" ).removeAttr("href");
 						  app.db.transaction(function(tx){   
-							  tx.executeSql('SELECT d.id, d.name FROM devices d inner join deviceinlist t on d.id = t.iddevice where t.idlist = ? ', [listToCheck], 
+							  tx.executeSql('SELECT d.id, d.name, d.address FROM devices d inner join deviceinlist t on d.id = t.iddevice where t.idlist = ? ', [listToCheck], 
 								 function(tx, results){
 								   var resultQuery = new Array();
 								   var len=results.rows.length;  
 								   var deviceDisconnected = '';
 								   if (!len){
 									   app.iPickView.alert("List empty","Info");  
+									   app.aParents.attr('href', app.href);
 									   return;
 								   }
+								   
+								   app.checkDeviceArrayAddress = new Array();
+								   app.checkDeviceArrayId =  new Array();
+								   app.deviceWithYou = new Array();
+								   app.deviceNotWithYou = new Array();
+								   
+								   
 								   for (var i=0;i<len;i++){  
-									   if (!app.checkDeviceIfConnectedById(results.rows.item(i).id)){
-										   deviceDisconnected+= results.rows.item(i).name + ' ';	   //
-									   }
+									   app.checkDeviceArrayAddress.push(results.rows.item(i).address);
+									   app.checkDeviceArrayId.push(results.rows.item(i).id);
 								   }
-								   if (deviceDisconnected){ 
-									   app.iPickView.alert("Disconnected: "+deviceDisconnected,"Info");  
-									   listLi.children('i').addClass('fa-check-square-not-all-conn');
-									   listLi.children('i').removeClass('fa-check-square-all-conn');
-								   }  
-								   else{
-									   app.iPickView.alert("You have taken everything!","Info");
-									   listLi.children('i').removeClass('fa-check-square-not-all-conn');
-									   listLi.children('i').addClass('fa-check-square-all-conn');
-								   }   
-								   aParents.attr('href', href);   
+	                               
+								   app.checkDeviceIfConnectedById(app.checkDeviceArrayId.pop(),app.checkDeviceArrayAddress.pop());
 								}, app.errorCB);          
 						  }, app.errorCB);   
 						 
@@ -1014,10 +1013,18 @@ var app = {
 					app.db.transaction(
 					       function(tx){
 					    	   app.deleteDeviceInList(tx,idDevice);
+					    	   for(var i=0;i<app.myDevices.length;i++){
+						    		if (app.myDevices[i].id == idDevice){
+						    			var indexToDelete = app.myDevices[i].list.indexOf(page.query.color);
+						    			app.myDevices[i].list.splice(indexToDelete, 1); 	
+						    		}
+						    	}       
+					    	   
+					    	   
 					    	  // app.reloadListDetail(page.query.title,page.query.id,page.query.color);  
 					    	},            
 					    	this.errorCB);
-					app.scanHome();
+					//app.scanHome();
 					     
 				   });   
 				if (!app.numberReloadListPage){
@@ -1550,9 +1557,10 @@ var app = {
 							 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
 								 cordova.plugins.notification.local.schedule({
 						    			id: app.idNotification,
-						    			sound: "ring.mp3",
 						    			title: app.myDevices[dev].name });
 								 app.idNotification++; 
+								 var audio = new Audio('ring.mp3');
+							      audio.play();
 							 }else{
 								 if (app.myDevices[dev].safetymode=="checked"){
 									 var audio = new Audio('ring.mp3');
@@ -1564,16 +1572,87 @@ var app = {
 			  }	   
 		 }        
 		},  
-		checkDeviceIfConnectedById: function(id){
+		checkDeviceIfConnectedById: function(id,address){
+			var connected = false;
 			for (var dev in app.myDevices){
 				if (id == app.myDevices[dev].id){
 					if (app.myDevices[dev].connected == 'connected'){
-						return true;
+						connected =  true; 
+						
 					}
+					break;
 				}  
 			 } 
-			return false;
+			if (connected){
+				 var device  = app.devices[address]; 
+				 device.readRSSI(function(rssi){
+					   if (rssi<= 0){
+						   	var rssiDist = app.calculateRssiDist(rssi); 
+						   	var preso = false;
+						   	if (rssiDist<=5000){  
+						   		preso = true;
+						   	}    
+						   	if (preso){
+						   		app.deviceWithYou.push(app.myDevices[dev].name);
+							}
+						   	else{
+						   		app.deviceNotWithYou.push(app.myDevices[dev].name);
+						   	}
+				     	}
+					   
+					   
+					   var nextAddress = app.checkDeviceArrayAddress.pop();
+					   var nexId =   app.checkDeviceArrayId.pop();
+					   if(nextAddress){
+						   app.checkDeviceIfConnectedById(nexId,nextAddress);
+					   }
+					   else{
+						   app.printResultCheckList();
+					   }
+					   
+					 
+				 },
+				 function(fail){
+					 app.deviceWithYou.push(app.myDevices[dev].name);
+					  var nextAddress = app.checkDeviceArrayAddress.pop();;
+					   var nexId =   app.checkDeviceArrayId.pop();
+					   if(nextAddress){
+						   app.checkDeviceIfConnectedById(nexId,nextAddress);
+					   }
+					   else{
+						   app.printResultCheckList();
+					   }
+				 }); 
+			}
+			else{
+				app.deviceNotWithYou.push(app.myDevices[dev].name);
+				 var nextAddress = app.checkDeviceArrayAddress.pop();
+				   var nexId =   app.checkDeviceArrayId.pop();
+				   if(nextAddress){
+					   app.checkDeviceIfConnectedById(nexId,nextAddress);
+				   }
+				   else{
+					   app.printResultCheckList();
+					  
+				   }
+			}
+			
 		},  
+		printResultCheckList: function(){
+			  if (app.deviceNotWithYou.length){ 
+				   app.iPickView.alert("No with you: "+app.deviceNotWithYou.join(","),"Info");  
+				   app.listLi.children('i').addClass('fa-check-square-not-all-conn');
+				   app.listLi.children('i').removeClass('fa-check-square-all-conn');
+			   }  
+			   else{
+				   app.iPickView.alert("You have taken everything!","Info");
+				   app.listLi.children('i').removeClass('fa-check-square-not-all-conn');
+				   app.listLi.children('i').addClass('fa-check-square-all-conn');
+			   } 
+			  
+			  app.aParents.attr('href', app.href);   
+			  
+		},
 		updateLocalStorageDevice:function(){
 			localStorage.setItem('devicesPick', JSON.stringify(app.devices));
 		},
@@ -1920,14 +1999,11 @@ var app = {
 			    	if (app.atBackground){
 			    		 cordova.plugins.notification.local.schedule({
 				    			id: app.idNotification,      
-				    		    //sound: "ring.mp3",
-				    		    sound: 'file:/'+app.directory+"ring.mp3",
 				    			title: 'Pik Call' });           
 						 app.idNotification++; 
-			    	}else{
-			    		var audio = new Audio('ring.mp3');
-				    	audio.play();
 			    	}
+		    		var audio = new Audio('ring.mp3');
+			    	audio.play();
 			    }
 			    device.DeviceNotification = true;
 			  },   
