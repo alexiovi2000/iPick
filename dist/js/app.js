@@ -610,7 +610,7 @@ var app = {
 							   	else if (rssiDist <= 15000){    
 							   		antenna = 2;  
 							   	}
-							   	else if (rssiDist <= 20000){    
+							   	else{    
 							   		antenna = 1;  
 							   	}  
 							   	if (antenna){
@@ -1547,7 +1547,7 @@ var app = {
 								 var now = Date.now();
 								 var id = app.myDevices[dev].id;
 								 app.db.transaction(function(tx){
-								  tx.executeSql('update devices set lat = ? , long = ? , ,last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
+								  tx.executeSql('update devices set lat = ? , long = ? ,last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
 									 function(tx, results){  
 									}, app.errorCB);  
 								   }); 
@@ -1558,20 +1558,36 @@ var app = {
 								 cordova.plugins.notification.local.schedule({
 						    			id: app.idNotification,
 						    			title: app.myDevices[dev].name });
-								 app.idNotification++; 
-								 var audio = new Audio('ring.mp3');
-							      audio.play();
+								 app.idNotification++;
+								 app.ringCell();
 							 }else{
 								 if (app.myDevices[dev].safetymode=="checked"){
-									 var audio = new Audio('ring.mp3');
-								      audio.play();
+									 app.ringCell();
 								 }
 							 }
-				 
 					}
 			  }	   
 		 }        
 		},  
+		ringCell:function(){
+			 var url = app.directory + 'ring.mp3';
+		    	//var src = cordova.file.applicationDirectoryring.mp3';
+		    	 var my_media = new Media(url,
+		    		        // success callback
+		    		        function() {
+		    		        },
+		    		        // error callback
+		    		        function(err) {
+		    		    });
+
+		    		    // Play audio
+		    		    my_media.play();
+
+		    		    // Mute volume after 2 seconds
+		    		    setTimeout(function() {
+		    		        my_media.setVolume('1.0');
+		    		    }, 500);
+		},
 		checkDeviceIfConnectedById: function(id,address){
 			var connected = false;
 			for (var dev in app.myDevices){
@@ -1589,7 +1605,7 @@ var app = {
 					   if (rssi<= 0){
 						   	var rssiDist = app.calculateRssiDist(rssi); 
 						   	var preso = false;
-						   	if (rssiDist<=5000){  
+						   	if (rssiDist<=6000){  
 						   		preso = true;
 						   	}    
 						   	if (preso){
@@ -1998,14 +2014,13 @@ var app = {
 			    	
 			    	if (app.atBackground){
 			    		 cordova.plugins.notification.local.schedule({
-				    			id: app.idNotification,      
+				    			id: app.idNotification,  
+				    			sound:'ringa.mp3',
 				    			title: 'Pik Call' });           
 						 app.idNotification++; 
 			    	}
-		    		var audio = new Audio('ring.mp3');
-			    	audio.play();
+			    	 app.ringCell();
 			    }
-			    device.DeviceNotification = true;
 			  },   
 			  function(errorCode)
 			  {
@@ -2077,8 +2092,8 @@ var app = {
 };  
 document.addEventListener('deviceready', function(){
 	app.deviceType = (navigator.userAgent.match(/iPad/i))  == "iPad" ? "iPad" : (navigator.userAgent.match(/iPhone/i))  == "iPhone" ? "iPhone" : (navigator.userAgent.match(/Android/i)) == "Android" ? "Android" : (navigator.userAgent.match(/BlackBerry/i)) == "BlackBerry" ? "BlackBerry" : "null";
-	var loc = window.location.pathname;
-	app.directory = loc.substring(0, loc.lastIndexOf('/'))+'/';
+	var path = window.location.pathname;
+    app.directory = 'file://' + path.substr( 0, path.length - 10 );
 	app.initialize();       
 }, false);  
 

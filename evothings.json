@@ -1,7 +1,7 @@
 {
   "name": "pick",
-  "version": "1.0",
-  "title": "Basic Template App",
+  "version": "1.0.1",
+  "title": "Pik",
   "description": "pick itrack",
   "tags": [],
   "libraries": [
@@ -13,5 +13,36 @@
   "index-file": "index.html",
   "uuid": "a4129053-83bc-466f-874f-029204bf0d55",
   "icon": "app-icon.png",
-  "doc-url": "https://evothings.com/2.1/doc/examples/template-basic-app.html"
+  "doc-url": "https://evothings.com/2.1/doc/examples/template-basic-app.html",
+  "plugins": [
+    {
+      "name": "cordova-plugin-ble",
+      "version": "1.4.2"
+    },
+    {
+      "name": "cordova-plugin-bluetooth-serial"
+    },
+    {
+      "name": "cordova-plugin-camera"
+    },
+    {
+      "name": "cordova-plugin-geolocation"
+    },
+    {
+      "name": "cordova-plugin-http",
+      "version": "v0.2.2"
+    },
+    {
+      "name": "cordova-plugin-whitelist"
+    },
+    {
+      "name": "de.appplant.cordova.plugin.local-notification",
+      "version": "0.8.4"
+    }
+  ],
+  "long-description": "Find you things!",
+  "author-name": "Alex Iovino",
+  "author-email": "iovino.alex@gmail.com",
+  "author-url": "https://evothings.com",
+  "cordova-id": "com.production.pick"
 }
