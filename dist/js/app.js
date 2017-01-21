@@ -422,7 +422,7 @@ var app = {
 			    cordova.plugins.locationManager.requestAlwaysAuthorization();
 			    app.disconnectToDevice();
 			    var delegate = new cordova.plugins.locationManager.Delegate();
-			    cordova.plugins.locationManager.setDelegate(delegate);
+			    cordova.plugins.locationManager.setDelegate(delegate); 
 			    this.devices = [];       
 				this.pictureSource = navigator.camera.PictureSourceType,
 			    this.destinationType = navigator.camera.DestinationType,  
@@ -1605,7 +1605,7 @@ var app = {
 					   if (rssi<= 0){
 						   	var rssiDist = app.calculateRssiDist(rssi); 
 						   	var preso = false;
-						   	if (rssiDist<=6000){  
+						   	if (rssiDist<=7000){  
 						   		preso = true;
 						   	}    
 						   	if (preso){
@@ -1656,7 +1656,7 @@ var app = {
 		},  
 		printResultCheckList: function(){
 			  if (app.deviceNotWithYou.length){ 
-				   app.iPickView.alert("No with you: "+app.deviceNotWithYou.join(","),"Info");  
+				   app.iPickView.alert("Not with you: "+app.deviceNotWithYou.join(","),"Info");  
 				   app.listLi.children('i').addClass('fa-check-square-not-all-conn');
 				   app.listLi.children('i').removeClass('fa-check-square-all-conn');
 			   }  
