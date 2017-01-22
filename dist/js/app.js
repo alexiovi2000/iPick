@@ -1,5 +1,23 @@
 
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    var string = msg.toLowerCase();
+    var substring = "script error";
+    if (string.indexOf(substring) > -1){
+        alert('Script Error: See Browser Console for Detail');
+    } else {
+        var message = [
+            'Message: ' + msg,
+            'URL: ' + url,
+            'Line: ' + lineNo,
+            'Column: ' + columnNo,
+            'Error object: ' + JSON.stringify(error)
+        ].join(' - ');
 
+        alert(message);
+    }
+
+    return false;
+};
 var $$ = Dom7;
 
 var i=false;
@@ -974,8 +992,14 @@ var app = {
 									   app.checkDeviceArrayAddress.push(results.rows.item(i).address);
 									   app.checkDeviceArrayId.push(results.rows.item(i).id);
 								   }
+	                               var id =  app.checkDeviceArrayId.pop();
+	                               var address = app.checkDeviceArrayAddress.pop();
 	                               
-								   app.checkDeviceIfConnectedById(app.checkDeviceArrayId.pop(),app.checkDeviceArrayAddress.pop());
+	                               var arrayNvoltePikPresi = new Array();
+	                               arrayNvoltePikPresi[address] = new Array();
+	                               arrayNvoltePikPresi[address]['preso']=0;
+	                               arrayNvoltePikPresi[address]['nopreso']=0;
+								   app.checkDeviceIfConnectedById(id,address,arrayNvoltePikPresi,0);
 								}, app.errorCB);          
 						  }, app.errorCB);   
 						 
@@ -1600,39 +1624,57 @@ var app = {
 		    		        my_media.setVolume('1.0');
 		    		    }, 500);
 		},
-		checkDeviceIfConnectedById: function(id,address){
+		checkDeviceIfConnectedById: function(id,address,arrayNvoltePikPresi,nvolte){
+			/**
+			 *  Visto che non sempre è affidabile, si prende l'rssi per dispositivo 5 volte.. se almeno 3
+			 *  volte dà lo stesso risultato, allora quello diventa il valore definitivo.
+			 */
 			var connected = false;
 			for (var dev in app.myDevices){
 				if (id == app.myDevices[dev].id){
 					if (app.myDevices[dev].connected == 'connected'){
 						connected =  true; 
-						
 					}
 					break;
 				}  
 			 } 
 			if (connected){
+				alert(address);
 				 var device  = app.devices[address]; 
 				 device.readRSSI(function(rssi){
 					   if (rssi<= 0){
+						   alert(rssi);
 						   	var rssiDist = app.calculateRssiDist(rssi); 
 						   	var preso = false;
 						   	if (rssiDist<=7000){  
 						   		preso = true;
-						   	}    
-						   	if (preso){
-						   		app.deviceWithYou.push(app.myDevices[dev].name);
-							}
-						   	else{
-						   		app.deviceNotWithYou.push(app.myDevices[dev].name);
-						   	}
+						   		arrayNvoltePikPresi[address]['preso']++;
+						   	}else{
+						   		arrayNvoltePikPresi[address]['nopreso']++;
+						   	} 
 				     	}
-					   
-					   
-					   var nextAddress = app.checkDeviceArrayAddress.pop();
-					   var nexId =   app.checkDeviceArrayId.pop();
+					   if (nvolte == 5){
+						   if (arrayNvoltePikPresi[address]['preso']>=3){
+								app.deviceWithYou.push(app.myDevices[dev].name);
+						   }
+						   else{
+							   app.deviceNotWithYou.push(app.myDevices[dev].name);
+						   }
+						   var nextAddress = app.checkDeviceArrayAddress.pop();
+						   var nexId =   app.checkDeviceArrayId.pop();
+						   arrayNvoltePikPresi[nextAddress] = new Array();
+						   arrayNvoltePikPresi[nextAddress]['preso']  = 0;
+						   arrayNvoltePikPresi[nextAddress]['nopreso']= 0;
+						   nvolte = 0;
+					   }
+					   else{
+						   var nextAddress = address;
+						   var nexId 	   =   id;
+						   nvolte++;
+					   }
+					  
 					   if(nextAddress){
-						   app.checkDeviceIfConnectedById(nexId,nextAddress);
+						   app.checkDeviceIfConnectedById(nexId,nextAddress,arrayNvoltePikPresi,nvolte);
 					   }
 					   else{
 						   app.printResultCheckList();
@@ -1642,7 +1684,7 @@ var app = {
 				 },
 				 function(fail){
 					 app.deviceWithYou.push(app.myDevices[dev].name);
-					  var nextAddress = app.checkDeviceArrayAddress.pop();;
+					  var nextAddress = app.checkDeviceArrayAddress.pop();
 					   var nexId =   app.checkDeviceArrayId.pop();
 					   if(nextAddress){
 						   app.checkDeviceIfConnectedById(nexId,nextAddress);
@@ -1652,7 +1694,7 @@ var app = {
 					   }
 				 }); 
 			}
-			else{
+			else{  
 				app.deviceNotWithYou.push(app.myDevices[dev].name);
 				 var nextAddress = app.checkDeviceArrayAddress.pop();
 				   var nexId =   app.checkDeviceArrayId.pop();
