@@ -588,55 +588,67 @@ var app = {
 				 app.stopStop();
 				 var addressItrackSelected = page.query.address;
 				 //app.connectToDevice(addressItrackSelected);
-				  
-				 app.intervalAbout = setInterval(function(){
-				   
-					 var device  = app.devices[addressItrackSelected]; 
-					 device.readRSSI(function(rssi){
-						   if (rssi<= 0){
-							   	var rssiDist = app.calculateRssiDist(rssi); 
-							   	$$(".row").children('div').removeClass('col-100-big');
-							   	$$(".row").children('div').children('div').removeClass('antenna-big');
-							   	var antenna = '';
-							   	if (rssiDist<=1000){  
-							   		antenna = 5;
-							   	}    
-							   	else if (rssiDist<=5000){
-							   		antenna = 4;
-							   	}
-							   	else if(rssiDist<=8000){
-							   		antenna = 3;   
-							   	}   
-							   	else if (rssiDist <= 15000){    
-							   		antenna = 2;  
-							   	}
-							   	else{    
-							   		antenna = 1;  
-							   	}  
-							   	if (antenna){
-								   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
-								  	if (antenna==1){
-								  		$$($$( ".row div:nth-child(1)")).children('div').css("margin","0 auto");
-								  	}
-								  	else{
-								  		$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
-								  	}
-							   	}
-						   }
-						 
-					 },
-					 function(fail){
-					 }); 
-					 
-
-					 
-				 },5000);  
-				 
 				 $$("#bell_ring").on('click',function(){
 					 app.onToggleButton(addressItrackSelected);  
 				 });
+				 
+				 var firstTime = true;
+				 app.getRssiAbout(addressItrackSelected,firstTime);
 			  });
 		},   
+		intervalAboutFn: function(addressItrackSelected){
+			
+			 app.intervalAbout = setInterval(function(addressItrackSelected){
+					app.getRssiAbout(addressItrackSelected,false);
+			 },5000,addressItrackSelected);  
+		},    
+		getRssiAbout: function(addressItrackSelected,firstTime){
+			 var device  = app.devices[addressItrackSelected]; 
+             console.log(JSON.stringify(device));			 
+			 device.readRSSI(function(rssi){
+				   if (rssi<= 0){
+					   	var rssiDist = app.calculateRssiDist(rssi); 
+					   	$$(".row").children('div').removeClass('col-100-big');
+					   	$$(".row").children('div').children('div').removeClass('antenna-big');
+					   	var antenna = '';
+					   	if (rssiDist<=1000){      
+					   		antenna = 5;
+					   	}    
+					   	else if (rssiDist<=5000){    
+					   		antenna = 4;
+					   	}
+					   	else if(rssiDist<=8000){
+					   		antenna = 3;   
+					   	}   
+					   	else if (rssiDist <= 15000){    
+					   		antenna = 2;  
+					   	}
+					   	else{    
+					   		antenna = 1;  
+					   	}  
+					   	if (antenna){
+						   	$$($$( ".row div:nth-child("+ antenna +")")).children('div').addClass('antenna-big');
+						  	if (antenna==1){
+						  		$$($$( ".row div:nth-child(1)")).children('div').css("margin","0 auto");
+						  	}
+						  	else{
+						  		$$( ".row div:nth-child("+ antenna  +")").addClass('col-100-big'); 
+						  	}
+					   	}
+				   }
+				   
+				   if (firstTime){
+					   app.intervalAboutFn(addressItrackSelected);
+				   }
+				 
+			 },
+			 function(fail){
+				 if (firstTime){
+					 app.intervalAboutFn(addressItrackSelected);
+				 }
+			 }); 
+			
+		},
 		pageDeviceOption: function(){
 			
 			 app.iPickView.onPageInit('DeviceOption', function (page) {
