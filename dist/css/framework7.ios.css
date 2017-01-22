@@ -2529,7 +2529,7 @@ html:not(.watch-active-state) .list-block .item-link:active,
 .list-block .item-link.active-state {
   -webkit-transition-duration: 0ms;
   transition-duration: 0ms;
-  background-color: #d9d9d9;
+  /*background-color: #d9d9d9;*/
 }
 html:not(.watch-active-state) .list-block .item-link:active .item-inner:after,
 .list-block .item-link.active-state .item-inner:after {
@@ -3377,7 +3377,7 @@ label.label-checkbox.active-state,
 label.label-radio.active-state {
   -webkit-transition-duration: 0ms;
   transition-duration: 0ms;
-  background-color: #d9d9d9;
+  /*background-color: #d9d9d9;*/
 }
 html:not(.watch-active-state) label.label-checkbox:active .item-inner:after,
 html:not(.watch-active-state) label.label-radio:active .item-inner:after,
@@ -3405,7 +3405,7 @@ html:not(.watch-active-state) .list-block .accordion-item-toggle:active,
 .list-block .accordion-item-toggle.active-state {
   -webkit-transition-duration: 0ms;
   transition-duration: 0ms;
-  background-color: #d9d9d9;
+  /*background-color: #d9d9d9;*/
 }
 html:not(.watch-active-state) .list-block .accordion-item-toggle:active > .item-inner:after,
 .list-block .accordion-item-toggle.active-state > .item-inner:after {
