@@ -1,84 +1,48 @@
 // Initialize your app
-
+var myApp = new Framework7();
 
 // Export selectors engine
 var $$ = Dom7;
 
-var i=false;
-
-
-
-var myApp = new Framework7({
-	template7Pages: true,
-	precompileTemplates: true, 
-	allowDuplicateUrls:true,
-	onAjaxStart:function(){
-		myApp.showPreloader();
-	},
-	onAjaxComplete:function(){
-		myApp.hidePreloader();
-	},
-	template7Data : {
-		'pippo' : {
-			'gigi' : [ {
-				'itemName' : 'Chiavi',
-				'list_color':[{'name':'azzurro'}]
-			}, {
-				'itemName' : 'Pc',
-				'list_color':[{'name':'azzurro'},
-				              {'name':'yellow'},
-				              {'name':'fucsia'}]
-			}, {
-				'itemName' : 'Portafoglio',
-				'list_color':[{'name':'azzurro'},
-				              {'name':'fucsia'}]
-			} ]
-		}
-
-	}
-
-	
+// Add view
+var mainView = myApp.addView('.view-main', {
+    // Because we use fixed-through navbar we can enable dynamic navbar
+    dynamicNavbar: true
 });
 
-var viewMain = myApp.addView('.view-main', {});
-
-viewMain.router.load({
-    url: 'home.html',
-    contextName:'pippo',
-    animatePages: false
- 
+// Callbacks to run specific code for specific pages, for example for About page:
+myApp.onPageInit('about', function (page) {
+    // run createContentPage func after link was clicked
+    $$('.create-page').on('click', function () {
+        createContentPage();
+    });
 });
 
-
-var listView = myApp.addView('.view-list',{});
-
-listView.router.load({
-    url: 'list.html',
-   // contextName:'pippo',
-    animatePages: false
- 
-});
-
-
-myApp.onPageInit('home', function (page) {
-   viewMain.params.dynamicNavbar = true;
-});
-
-myApp.onPageInit('listPage', function (page) {
-	listView.params.dynamicNavbar = true;
-});
-
-
-/**
- * Se va rifatto un reaload della pagina, va aggiunta la navbar perchè se la
- * perde
- * 
- * 
- * viewMain.router.load({ url: 'home.html', 
- *                       contextName:'pippo', 
- *                       animatePages:
- * 						 false });
- * 
- * $$("#NavigationTabHome").append($$("#navBarList").html())
- */
-
+// Generate dynamic page
+var dynamicPageIndex = 0;
+function createContentPage() {
+	mainView.router.loadContent(
+        '<!-- Top Navbar-->' +
+        '<div class="navbar">' +
+        '  <div class="navbar-inner">' +
+        '    <div class="left"><a href="#" class="back link"><i class="icon icon-back"></i><span>Back</span></a></div>' +
+        '    <div class="center sliding">Dynamic Page ' + (++dynamicPageIndex) + '</div>' +
+        '  </div>' +
+        '</div>' +
+        '<div class="pages">' +
+        '  <!-- Page, data-page contains page name-->' +
+        '  <div data-page="dynamic-pages" class="page">' +
+        '    <!-- Scrollable page content-->' +
+        '    <div class="page-content">' +
+        '      <div class="content-block">' +
+        '        <div class="content-block-inner">' +
+        '          <p>Here is a dynamic page created on ' + new Date() + ' !</p>' +
+        '          <p>Go <a href="#" class="back">back</a> or go to <a href="services.html">Services</a>.</p>' +
+        '        </div>' +
+        '      </div>' +
+        '    </div>' +
+        '  </div>' +
+        '</div>'
+    );
+	return;
+}

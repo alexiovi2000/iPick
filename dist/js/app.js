@@ -1639,11 +1639,9 @@ var app = {
 				}  
 			 } 
 			if (connected){
-				alert(address);
 				 var device  = app.devices[address]; 
 				 device.readRSSI(function(rssi){
 					   if (rssi<= 0){
-						   alert(rssi);
 						   	var rssiDist = app.calculateRssiDist(rssi); 
 						   	var preso = false;
 						   	if (rssiDist<=7000){  
