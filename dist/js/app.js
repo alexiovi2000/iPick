@@ -1570,27 +1570,33 @@ var app = {
 			 return dist;
 		},
 		alertDeviceConnectionLost:function(address){ 
-		      
+			
 			 for (var dev in app.myDevices){
 				 if (app.myDevices[dev].address == address){
+					 app.myDevices[dev].last_seen =  Date.now();
 					 app.myDevices[dev].connected = 'notconnected';  
+					 app.myDevices[dev].lastUpdate = Date.now();
+					 if (app.currentPosition){     
+						 var lat =  app.currentPosition.Lat;
+						 app.myDevices[dev].lat = app.currentPosition.Lat ;
+						 app.myDevices[dev].long = app.currentPosition.Long ;
+						 app.db.transaction(function(tx){
+						  tx.executeSql('update devices set lat = ? , long = ? ,last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,app.nowLost,app.idLost], 
+							 function(tx, results){  
+							}, app.errorCB);  
+						   }); 
+					 }
+					 else{
+						 app.nowLost = Date.now();
+						 app.idLost = app.myDevices[dev].id;
+						 app.db.transaction(function(tx){
+							  tx.executeSql('update devices set last_seen = ? where id = ?', [app.nowLost,app.idLost], 
+								 function(tx, results){  
+								}, app.errorCB);  
+							   }); 
+					 }
 					if (!app.devices[address].alerted){
 							 app.devices[address].alerted = true;
-							 app.myDevices[dev].lastUpdate = Date.now();
-							 if (app.currentPosition){     
-								 var lat =  app.currentPosition.Lat;
-								 app.myDevices[dev].lat = app.currentPosition.Lat ;
-								 app.myDevices[dev].long = app.currentPosition.Long ;
-								 var now = Date.now();
-								 var id = app.myDevices[dev].id;
-								 app.db.transaction(function(tx){
-								  tx.executeSql('update devices set lat = ? , long = ? ,last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,now,id], 
-									 function(tx, results){  
-									}, app.errorCB);  
-								   }); 
-							 }      
-							    
-							 
 							 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
 								 cordova.plugins.notification.local.schedule({
 						    			id: app.idNotification,
