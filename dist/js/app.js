@@ -1543,6 +1543,7 @@ var app = {
 						 var lat =  app.currentPosition.Lat+j;
 						 app.myDevices[i].lat = JSON.parse(JSON.stringify(app.currentPosition.Lat)) ;
 						 app.myDevices[i].long = JSON.parse(JSON.stringify(app.currentPosition.Long)) ;
+						 app.myDevices[i].last_seen = device.lastSeen;
 						 var id = app.myDevices[i].id;
 						 app.db.transaction(function(tx){
 						  tx.executeSql('update devices set lat = ? , long = ? , last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,device.lastSeen,id], 
