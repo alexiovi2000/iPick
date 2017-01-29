@@ -116,19 +116,20 @@
 	<div class="panel panel-left panel-cover">
 		<div class="list-block list-block-panel">
 			<center><img class="img-custom img_panel" src="dist/img/PIK_bianco_small.png"></center>
-			<ul>
+	<form id="myformpanel">
+	<ul>
      <li>
       <div class="item-content">
         <div class="item-media"><i class="fa fa-bell-slash" aria-hidden="true"></i></div>
         <div class="item-inner item-inner-custom">
-          <div class="item-title item-title-custom label">Silenzioso</div>
+          <div class="item-title item-title-custom label">Silent</div>
           <div class="item-input item-input-custom">
             <label class="label-switch">
-              <input type="checkbox">
-              <div class="checkbox"></div>
+              <input type="checkbox" id="checkBoxVal" name="silent">
+              <div class="checkbox" id="silentMode"></div>
             </label>
           </div>
-        </div>
+        </div>  
       </div>
     </li>
     <li>
@@ -156,6 +157,7 @@
       </div>
     </li>
     </ul>
+    </form>   
 		</div>
 	</div>
   

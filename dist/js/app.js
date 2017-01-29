@@ -33,6 +33,7 @@ var app = {
 		username:'',
 		listView:{},
 		mapView:{},
+		silent:false,
 		devices:[],
 		myDevices:[],
 		idNotification:1,
@@ -291,11 +292,25 @@ var app = {
 
 				});
 			  
+			    var silentMode = localStorage.getItem('piksilentmode');
+			    
+			    if (silentMode){
+			    	app.silent = true;
+			    	$$("#checkBoxVal").prop("checked",true);
+			    }
 			  
 			     $$("#info_id").on('click',function(){
 			    	app.iPickView.pickerModal('.picker-infopik');
 				 });
 			      
+			     
+			     $$("#silentMode").on('click',function(){
+			    	 app.silent = !($$("#checkBoxVal").prop("checked"));
+			    	 localStorage.setItem('piksilentmode',app.silent);  
+			    	 
+			     });
+			           
+			     
 				  app.listView = app.iPickView.addView('.view-list',{
 					  dynamicNavbar:true
 				  });  
@@ -760,7 +775,32 @@ var app = {
 						});
 					});
 				
-				
+				$$("#powerOffDevice").on('click',function(){
+					 app.iPickView.showPreloader();
+					 for (var i=0;i<app.myDevices.length;i++){
+						 if (app.myDevices[i].id == page.query.id){
+					    	 var addressDeviceSelectedOption = app.myDevices[i].address;
+					    	 break;
+						 }
+	  				 }
+					
+					var device = app.devices[addressDeviceSelectedOption];
+					device.writeServiceCharacteristic(    
+							    '00001803-0000-1000-8000-00805f9b34fb', 
+							    '00002a06-0000-1000-8000-00805f9b34fb',      
+							    new Uint8Array([3]), // Write password   
+							    function()
+							    {    
+							    	 app.iPickView.hidePreloader();
+							    	app.iPickView.alert("Pik Closed","Info");
+							    },      
+							    function(errorCode)     
+							    {
+							    	app.iPickView.hidePreloader();
+							    	app.iPickView.alert("Error closed Pik, try again.","Error");
+							    });
+				});
+				  
 				$$("#updateDevice").on('click',function(){
 					//if($$("#namePick_id").val() && app.newDeviceFoto){
 						if (!$$("#namePick_id").val()){
@@ -1611,15 +1651,17 @@ var app = {
 					 }
 					if (!app.devices[address].alerted){
 							 app.devices[address].alerted = true;
-							 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
-								 cordova.plugins.notification.local.schedule({
-						    			id: app.idNotification,
-						    			title: app.myDevices[dev].name });
-								 app.idNotification++;
-								 app.ringCell();
-							 }else{
-								 if (app.myDevices[dev].safetymode=="checked"){
+							 if (!app.silent){
+								 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
+									 cordova.plugins.notification.local.schedule({
+							    			id: app.idNotification,
+							    			title: app.myDevices[dev].name });
+									 app.idNotification++;
 									 app.ringCell();
+								 }else{
+									 if (app.myDevices[dev].safetymode=="checked"){
+										 app.ringCell();
+									 }
 								 }
 							 }
 					}
@@ -2121,14 +2163,13 @@ var app = {
 			
 			var serviceUID = null;
 			if (app.deviceType=='iPhone' || app.deviceType=='iPad'){
-				serviceUID = new Array('0000180f-0000-1000-8000-00805f9b34fb','0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb');
+				serviceUID = new Array('0000180f-0000-1000-8000-00805f9b34fb','0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb','00001803-0000-1000-8000-00805f9b34fb');
 			}
 			// Read all services.
 			device.readServices(  
 			     serviceUID,     
 				function(device)  
 				{         
-			    	
 					if (newDev==true){
 						app.readPairingMode(device);
 					}
