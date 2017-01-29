@@ -651,7 +651,6 @@ var app = {
 		},    
 		getRssiAbout: function(addressItrackSelected,firstTime){
 			 var device  = app.devices[addressItrackSelected]; 
-             console.log(JSON.stringify(device));			 
 			 device.readRSSI(function(rssi){
 				   if (rssi<= 0){
 					   	var rssiDist = app.calculateRssiDist(rssi); 
