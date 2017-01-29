@@ -171,7 +171,10 @@ var app = {
 		    this.db.transaction(function(tx){
 				  tx.executeSql('insert into devices (id,address,name,image,connected, last_seen,safetymode) values (?,?,?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image ,obj.connected,obj.last_seen,obj.safetymode], 
 					 function(tx, results){  
-					  window.location='index.html';  
+					  	for (var i in app.devices){
+					  		app.devices[i].close();
+					  	}
+					  	window.location='index.html';  
 					}, app.errorCB);
 		    });  
 		},      
@@ -207,6 +210,9 @@ var app = {
 			 this.db.transaction(function(tx){
 				  tx.executeSql('insert into lists (id,name,image,color) values (?,?,?,?)', [obj.id,obj.name,obj.image,obj.color], 
 					 function(tx, results){   
+					  for (var i in app.devices){
+                          app.devices[i].close();
+                      }
 					  window.location='index.html';      
 					}, app.errorCB);
 			  }, app.errorCB);    
@@ -436,8 +442,13 @@ var app = {
 					  app.pageInitUpdateList();
 		},  
 		initialize:function(){      
-			   // this.deleteAllDevice();    
-			    cordova.plugins.locationManager.requestAlwaysAuthorization();
+			   // this.deleteAllDevice();   
+			    if (app.os=='android'){
+			    	cordova.plugins.locationManager.requestAlwaysAuthorization();
+			    }
+			    else{
+			    	cordova.plugins.locationManager.requestWhenInUseAuthorization();
+			    }
 			    app.disconnectToDevice();
 			    var delegate = new cordova.plugins.locationManager.Delegate();
 			    cordova.plugins.locationManager.setDelegate(delegate); 
@@ -450,6 +461,9 @@ var app = {
 				//return;
 				$$("#logout_id").on('click',function(){  
 					localStorage.setItem('tokenPick','');
+					 for (var i in app.devices){
+                         app.devices[i].close();
+                     }
 					window.location='index.html';   
 				});
 				
@@ -1251,12 +1265,12 @@ var app = {
 			app.markers = new Array();   
 		},
 	    loadHome:function(){
-			this.viewMain.router.load({
+			app.viewMain.router.load({
 			    url: 'home.html',
 			    contextName:'devices',   
 			    animatePages: false
 			});  
-			this.scanHome();
+			app.scanHome();
 		},      
 		scanHome:function(){
 			  app.startScan();
@@ -1573,6 +1587,8 @@ var app = {
 			
 			 for (var dev in app.myDevices){
 				 if (app.myDevices[dev].address == address){
+					 app.idLost = app.myDevices[dev].id;
+					 app.nowLost = Date.now();
 					 app.myDevices[dev].last_seen =  Date.now();
 					 app.myDevices[dev].connected = 'notconnected';  
 					 app.myDevices[dev].lastUpdate = Date.now();
@@ -1587,8 +1603,6 @@ var app = {
 						   }); 
 					 }
 					 else{
-						 app.nowLost = Date.now();
-						 app.idLost = app.myDevices[dev].id;
 						 app.db.transaction(function(tx){
 							  tx.executeSql('update devices set last_seen = ? where id = ?', [app.nowLost,app.idLost], 
 								 function(tx, results){  
@@ -1613,7 +1627,12 @@ var app = {
 		 }        
 		},  
 		ringCell:function(){
-			 var url = app.directory + 'ring.mp3';
+		     if (app.os=='android'){
+		    	 var url = app.directory + 'ring.mp3';
+		     }
+		     else{
+		    	 var url = app.directory + 'ring.wav';
+		     }
 		    	//var src = cordova.file.applicationDirectoryring.mp3';
 		    	 var my_media = new Media(url,
 		    		        // success callback
@@ -1624,12 +1643,12 @@ var app = {
 		    		    });
 
 		    		    // Play audio
-		    		    my_media.play();
+		    		    my_media.play({playAudioWhenScreenIsLocked :true});
 
 		    		    // Mute volume after 2 seconds
 		    		    setTimeout(function() {
 		    		        my_media.setVolume('1.0');
-		    		    }, 500);
+		    		    }, 500); 
 		},
 		checkDeviceIfConnectedById: function(id,address,arrayNvoltePikPresi,nvolte){
 			/**
@@ -2037,6 +2056,9 @@ var app = {
 		    app.db.transaction(function(tx){
 				  tx.executeSql('update devices set name = ? ,image = ? ,safetymode = ? where id = ?', [name,image,safetymode,idDevice],   
 					 function(tx, results){    
+					  for (var i in app.devices){
+                          app.devices[i].close();
+                     }
 					  window.location='index.html';        
 					}, app.errorCB);
 		    });    
@@ -2046,6 +2068,9 @@ var app = {
 			app.db.transaction(function(tx){
 				  tx.executeSql('update lists set name = ? ,image = ? ,color = ? where id = ?', [name,app.updateListFoto,color,idList],   
 					 function(tx, results){   
+					  for (var i in app.devices){
+                          app.devices[i].close();
+                      }
 					  window.location='index.html'; 
 					}, app.errorCB);
 		    });    
@@ -2151,8 +2176,19 @@ var app = {
 };  
 document.addEventListener('deviceready', function(){
 	app.deviceType = (navigator.userAgent.match(/iPad/i))  == "iPad" ? "iPad" : (navigator.userAgent.match(/iPhone/i))  == "iPhone" ? "iPhone" : (navigator.userAgent.match(/Android/i)) == "Android" ? "Android" : (navigator.userAgent.match(/BlackBerry/i)) == "BlackBerry" ? "BlackBerry" : "null";
+	if (app.deviceType=='iPhone' || app.deviceType=='iPad'){
+          app.os = 'ios';		
+	}
+	else{
+		app.os = 'android';
+	}
 	var path = window.location.pathname;
-    app.directory = 'file://' + path.substr( 0, path.length - 10 );
+	if (app.os=='android'){
+		app.directory = 'file://' + path.substr( 0, path.length - 10 );
+	}
+	else{
+		app.directory = path.substr( 0, path.length - 10 );
+	}
 	app.initialize();       
 }, false);  
 
