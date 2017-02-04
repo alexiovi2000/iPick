@@ -1882,9 +1882,6 @@ var app = {
 							function(device)    
 							{   
 								if (device.__isConnected){
-									app.devices[device.address].alerted = false;  
-									app.devices[device.address].connected = 'connected';  
-								    app.updateConnectionDeviceFound(device);
 								    app.readServices(device,false);  
 								}
 								else{
@@ -2150,7 +2147,7 @@ var app = {
 		saveUpdateList:function(idList,nameList,color,nameimagelist){
 			app.updateList(idList,nameList,color,nameimagelist);
 		},
-		logClick:function(device){
+		logClick:function(device,fromConnection){
 			device.enableServiceNotification(
 			  '0000ffe0-0000-1000-8000-00805f9b34fb',
 			  '0000ffe1-0000-1000-8000-00805f9b34fb',
@@ -2163,7 +2160,8 @@ var app = {
 			    		app.onToggleButton(address);
 			    	}
 			    }    
-			    if (res == 2){
+			    
+			    if (res == 2 && !fromConnection){
 			    	
 			    	if (app.atBackground){
 			    		 cordova.plugins.notification.local.schedule({
@@ -2174,6 +2172,7 @@ var app = {
 			    	}
 			    	 app.ringCell();
 			    }
+			    fromConnection = false;
 			  },   
 			  function(errorCode)
 			  {
@@ -2201,16 +2200,14 @@ var app = {
 						app.readPairingMode(device);
 					}
 					else{   
+						device.alerted = false;  
+						device.connected = 'connected';  
+					    app.updateConnectionDeviceFound(device);
 						app.devices[device.address] = device;
-						if (device.isConnected()){
-							app.readBattery(device);
-							app.writePasswordiTrak(device);     
-						    //abilito il click sul pulsante
-							app.logClick(device);	
-						}
-						else{
-							alert("pippppolo");
-						}
+						app.readBattery(device);
+						app.writePasswordiTrak(device);     
+					    //abilito il click sul pulsante
+						app.logClick(device,true);	
 					}
 				},
 				function(error)  
