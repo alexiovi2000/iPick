@@ -127,7 +127,7 @@ var app = {
 		   
 		getMyLists: function(callback){
 			  app.db.transaction(function(tx){
-				  tx.executeSql('SELECT id, name,image,color FROM lists', [], 
+				  tx.executeSql('SELECT id, name,image,color,nameimagelist FROM lists', [], 
 					 function(tx, results){    
 					           var len=results.rows.length;
 							   if (!len){
@@ -195,7 +195,7 @@ var app = {
 					}, app.errorCB)
 			  }, app.errorCB);   
 		},
-		setMyList:function(nameList,color){
+		setMyList:function(nameList,color,iconChoose){
 			var myLists = app.myLists;
 			if ($.isEmptyObject(myLists)){
 				myLists = new Array();
@@ -205,11 +205,12 @@ var app = {
 					color:color,
 					image:app.newListFoto,
 					id:myLists.length + 1,
+					nameimagelist:iconChoose
 			}  
 			myLists.push(obj);  
 			app.myLists = myLists;
 			 this.db.transaction(function(tx){
-				  tx.executeSql('insert into lists (id,name,image,color) values (?,?,?,?)', [obj.id,obj.name,obj.image,obj.color], 
+				  tx.executeSql('insert into lists (id,name,image,color,nameimagelist) values (?,?,?,?,?)', [obj.id,obj.name,obj.image,obj.color,obj.nameimagelist], 
 					 function(tx, results){   
 					  for (var i in app.devices){
                           app.devices[i].close();
@@ -244,6 +245,10 @@ var app = {
 					            app.viewMain.router.loadPage('registration.html'); //load another page with auth form
 					            return false; //required to prevent default router action
 					        }   
+					        
+					},
+					onPageBeforeInit:function(application,page){
+						
 					},
 					onPageAfterBack:function(application, page){  
 						switch (page.name){
@@ -251,7 +256,7 @@ var app = {
 						   {     
 							   clearInterval(app.intervalAbout);
 							   app.scanHome();  
-						   }    
+						   }     
 						   break;
 						   case 'mapPageNotConnected':
 						   {     
@@ -459,8 +464,14 @@ var app = {
 		initialize:function(){      
 			   // this.deleteAllDevice();   
 			    if (app.os=='android'){
-			    	cordova.plugins.locationManager.requestAlwaysAuthorization();
+				    cordova.plugins.backgroundMode.enable();
+				    cordova.plugins.backgroundMode.overrideBackButton();
+				    cordova.plugins.backgroundMode.configure({ silent: true });
+				    cordova.plugins.backgroundMode.on('activate', function() {
+				    	   cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
+				    });
 			    }
+			    
 			    else{
 			    	cordova.plugins.locationManager.requestWhenInUseAuthorization();
 			    }
@@ -479,7 +490,7 @@ var app = {
 					 for (var i in app.devices){
                          app.devices[i].close();
                      }
-					window.location='index.html';   
+					app.db.transaction(app.dropTables, app.errorCB);
 				});
 				
 				bluetoothSerial.isEnabled(
@@ -511,13 +522,14 @@ var app = {
 	    },
 		populateDB:function(tx){  
 			 tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICES (id unique,address,name,image,connected,safetymode, long,lat, last_seen)');
-			 tx.executeSql('CREATE TABLE IF NOT EXISTS LISTS (id unique,name,image,color)');
+			 tx.executeSql('CREATE TABLE IF NOT EXISTS LISTS (id unique,name,image,color,nameimagelist)');
 	         tx.executeSql('CREATE TABLE IF NOT EXISTS DEVICEINLIST (idlist,iddevice)');    
 		},    
 		dropTables:function(tx){
 			tx.executeSql('DROP TABLE  DEVICES ');
-			 tx.executeSql('DROP TABLE LISTS');
-	         tx.executeSql('DROP TABLE  DEVICEINLIST ');    
+			tx.executeSql('DROP TABLE LISTS');
+	        tx.executeSql('DROP TABLE  DEVICEINLIST ');    
+	         window.location='index.html';   
 		},
 		pageInitHome:function(){
 			
@@ -627,21 +639,20 @@ var app = {
 			  });
 			
 		},
-		pageInitAbout:function(){   
-			  
-			 app.iPickView.onPageInit('about', function (page) {
-				 clearInterval(app.intervalHome);  
-				 clearInterval(app.intervalPosition)
-				 app.stopStop();
-				 var addressItrackSelected = page.query.address;
-				 //app.connectToDevice(addressItrackSelected);
-				 $$("#bell_ring").on('click',function(){
-					 app.onToggleButton(addressItrackSelected);  
-				 });
-				 
-				 var firstTime = true;
-				 app.getRssiAbout(addressItrackSelected,firstTime);
-			  });
+		pageInitAbout:function(){
+			app.iPickView.onPageInit('about', function (page) {
+            clearInterval(app.intervalHome);
+            clearInterval(app.intervalPosition)
+            //app.stopStop();
+            var addressItrackSelected = page.query.address;
+            //app.connectToDevice(addressItrackSelected);
+            var device = app.devices[addressItrackSelected];
+            $$("#bell_ring").on('click',function(){
+                            app.onToggleButton(addressItrackSelected);
+                            });
+            var firstTime = true;
+            app.getRssiAbout(addressItrackSelected,firstTime);
+            });
 		},   
 		intervalAboutFn: function(addressItrackSelected){
 			
@@ -821,13 +832,14 @@ var app = {
 				 for (var i=0;i<app.myLists.length;i++){
 					 if (app.myLists[i].id == page.query.id){
 						 var image = document.getElementById('largeImageListUpd');    
-				    	 image.src =  "data:image/jpeg;base64,"+app.myLists[i].image;  
+				    	 image.src =  "icons/"+app.myLists[i].nameimagelist+".png";  
 				    	 app.updateListFoto = app.myLists[i].image;
+				    	 app.iconChoose = app.myLists[i].nameimagelist
 				    	 break;
 					 }
   				 }
 				 
-				 var colorChoosen = '';
+				    var colorChoosen = page.query.color;
 					$$('#listColorId_inputUpd').on('click', function () {
 						  // Check first, if we already have opened picker
 						  if ($$('.picker-modal.modal-in').length > 0) {
@@ -946,11 +958,11 @@ var app = {
 							$$(".col-33").on('click',function(){
 							  var txtClass = $$(this).attr("class").split(" ")[1];
 							  
-							  var iconChoose = txtClass.split("_")[1];
+							  app.iconChoose = txtClass.split("_")[1];
 							  app.iPickView.closeModal('.picker-modal.modal-in');
 							  
-							  var url = 'icons_w/'+iconChoose+'.png';
-							  var url_blue = 'icons/'+iconChoose+'.png';
+							  var url = 'icons_w/'+app.iconChoose+'.png';
+							  var url_blue = 'icons/'+app.iconChoose+'.png';
 							  document.getElementById('largeImageListUpd').src = url_blue;   
 							  app.iPickView.showPreloader();
 								app.toDataUrl(url, function(base64Img) {
@@ -974,7 +986,7 @@ var app = {
 							app.iPickView.alert("Name's list is mandatory","Error");
                     		return;
 						}
-						app.saveUpdateList(page.query.id,$$("#List_id_upd").val(),colorChoosen);
+						app.saveUpdateList(page.query.id,$$("#List_id_upd").val(),colorChoosen,app.iconChoose);
 				});  
 				 
 			 });
@@ -994,6 +1006,7 @@ var app = {
 				                      
 				   $$('.swipeout.swipeList').on('deleted', function (e) {
 					var idList = $$(this).attr('idList')*1;
+					var colorList = $$(this).attr('colorList');
 					app.db.transaction( 
 					       function(tx){
 					    	   app.deleteList(tx,idList);
@@ -1002,7 +1015,14 @@ var app = {
 					    			   app.myLists.splice(i, 1);
 					    			   break;   
 					    		   }         
-					    	   }      
+					    	   }    
+					    	   
+					    	   for(var i=0;i<app.myDevices.length;i++){
+					    			var indexToDelete = app.myDevices[i].list.indexOf(colorList);
+					    			if (indexToDelete>-1){
+					    				app.myDevices[i].list.splice(indexToDelete, 1);
+					    			}
+						    	}       
 					    	},         
 					    	this.errorCB);
 				   });     
@@ -1367,7 +1387,8 @@ var app = {
 			}
 			app.temporizzatoreCount++;
 		},
-		addNewList: function(firstTime){  
+		addNewList: function(firstTime){ 
+			app.iconChoose ='';
 			app.listView.router.load({
 			    url: 'newList.html',
 			    animatePages: true      
@@ -1488,11 +1509,11 @@ var app = {
 							$$(".col-33").on('click',function(){
 							  var txtClass = $$(this).attr("class").split(" ")[1];
 							  
-							  var iconChoose = txtClass.split("_")[1];
+							  app.iconChoose = txtClass.split("_")[1];
 							  app.iPickView.closeModal('.picker-modal.modal-in');
 							    
-							   var url = 'icons_w/'+iconChoose+'.png';
-							   var url_blue = 'icons/'+iconChoose+'.png';
+							   var url = 'icons_w/'+app.iconChoose+'.png';
+							   var url_blue = 'icons/'+app.iconChoose+'.png';
 							   app.iPickView.showPreloader();
 							   document.getElementById('largeImageList').src = url_blue;
 								app.toDataUrl(url, function(base64Img) {
@@ -1525,7 +1546,7 @@ var app = {
 							app.iPickView.alert("Color's list is mandatory","Error");
                     		return;
 					 }     
-						app.saveNewList($$("#List_id").val(),colorChoosen);
+						app.saveNewList($$("#List_id").val(),colorChoosen,app.iconChoose);
 				});  
 			  });      
 			
@@ -1851,19 +1872,24 @@ var app = {
 				},    
 				function(errorCode)   
 				{  
-					device.close();  
-					evothings.easyble.closeConnectedDevices();
+					device.close(); 
+					alert("Error Read Services Pik");
 				});     
 				
 			}else{
 				if (device && app.isMyDevice(device.address)  && !device.isConnected()){
 					device.connect(         
 							function(device)    
-							{       
-								app.devices[device.address].alerted = false;  
-								app.devices[device.address].connected = 'connected';  
-							    app.updateConnectionDeviceFound(device);
-							    app.readServices(device,false);   
+							{   
+								if (device.__isConnected){
+									app.devices[device.address].alerted = false;  
+									app.devices[device.address].connected = 'connected';  
+								    app.updateConnectionDeviceFound(device);
+								    app.readServices(device,false);  
+								}
+								else{
+									device.close();
+								}
 							},    
 							function(errorCode)   
 							{  
@@ -2073,6 +2099,8 @@ var app = {
 	   	        	  lat:app.currentPosition.Lat,
 	   	        	  lng:app.currentPosition.Long
 	   	          });
+		    	  
+		    	 var geoloccontrol = new klokantech.GeolocationControl(app.map, 15);
 	    	  
 		    }
 				app.setMarkerDevices();
@@ -2104,10 +2132,10 @@ var app = {
 					}, app.errorCB);
 		    });    
 		},   
-		updateList: function(id,name,color){
+		updateList: function(id,name,color, nameimagelist){
 			var idList = id*1;
 			app.db.transaction(function(tx){
-				  tx.executeSql('update lists set name = ? ,image = ? ,color = ? where id = ?', [name,app.updateListFoto,color,idList],   
+				  tx.executeSql('update lists set name = ? ,image = ? ,color = ? , nameimagelist = ? where id = ?', [name,app.updateListFoto,color,nameimagelist,idList],   
 					 function(tx, results){   
 					  for (var i in app.devices){
                           app.devices[i].close();
@@ -2116,11 +2144,11 @@ var app = {
 					}, app.errorCB);
 		    });    
 		},
-		saveNewList:function(nameList,color){
-			app.setMyList(nameList,color);
+		saveNewList:function(nameList,color,iconChoose){
+			app.setMyList(nameList,color,iconChoose);
 		},
-		saveUpdateList:function(idList,nameList,color){
-			app.updateList(idList,nameList,color);
+		saveUpdateList:function(idList,nameList,color,nameimagelist){
+			app.updateList(idList,nameList,color,nameimagelist);
 		},
 		logClick:function(device){
 			device.enableServiceNotification(
@@ -2135,7 +2163,7 @@ var app = {
 			    		app.onToggleButton(address);
 			    	}
 			    }    
-			    if (res == 2 /*&& device.DeviceNotification*/){
+			    if (res == 2){
 			    	
 			    	if (app.atBackground){
 			    		 cordova.plugins.notification.local.schedule({
@@ -2162,7 +2190,7 @@ var app = {
 			
 			var serviceUID = null;
 			if (app.deviceType=='iPhone' || app.deviceType=='iPad'){
-				serviceUID = new Array('0000180f-0000-1000-8000-00805f9b34fb','0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb','00001803-0000-1000-8000-00805f9b34fb');
+				//serviceUID = new Array('0000180f-0000-1000-8000-00805f9b34fb','0000fff0-0000-1000-8000-00805f9b34fb','0000ffe0-0000-1000-8000-00805f9b34fb','00001802-0000-1000-8000-00805f9b34fb','00001803-0000-1000-8000-00805f9b34fb');
 			}
 			// Read all services.
 			device.readServices(  
@@ -2172,21 +2200,27 @@ var app = {
 					if (newDev==true){
 						app.readPairingMode(device);
 					}
-					else{     
-						app.readBattery(device);
-						app.writePasswordiTrak(device);     
-						//abilito il click sul pulsante
-			            app.logClick(device);	
+					else{   
+						app.devices[device.address] = device;
+						if (device.isConnected()){
+							app.readBattery(device);
+							app.writePasswordiTrak(device);     
+						    //abilito il click sul pulsante
+							app.logClick(device);	
+						}
+						else{
+							alert("pippppolo");
+						}
 					}
 				},
 				function(error)  
 				{
-					console.log('Error: Failed to read services: ' + error);
+					alert('Error: Failed to read services: ' + JSON.stringify(error));
 				});
 		},
 	    onToggleButton: function(address)
 		{
-			var device = app.devices[address];      
+			var device = app.devices[address];  
 			if (app.devicesRing[address]){
 				app.devicesRing[address] = 0;
 				var led = new Uint8Array([0]);          
