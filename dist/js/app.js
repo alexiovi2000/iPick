@@ -470,6 +470,8 @@ var app = {
 				    cordova.plugins.backgroundMode.on('activate', function() {
 				    	   cordova.plugins.backgroundMode.disableWebViewOptimizations(); 
 				    });
+				    
+				    cordova.plugins.locationManager.requestAlwaysAuthorization();
 			    }
 			    
 			    else{
@@ -1873,7 +1875,6 @@ var app = {
 				function(errorCode)   
 				{  
 					device.close(); 
-					alert("Error Read Services Pik");
 				});     
 				
 			}else{
