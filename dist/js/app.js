@@ -1,5 +1,5 @@
 
-window.onerror = function (msg, url, lineNo, columnNo, error) {
+/*window.onerror = function (msg, url, lineNo, columnNo, error) {
     var string = msg.toLowerCase();
     var substring = "script error";
     if (string.indexOf(substring) > -1){
@@ -17,7 +17,7 @@ window.onerror = function (msg, url, lineNo, columnNo, error) {
     }
 
     return false;
-};
+};*/
 var $$ = Dom7;
 
 var i=false;
@@ -2116,11 +2116,115 @@ var app = {
 	   	        	  lng:app.currentPosition.Long
 	   	          });
 		    	  
-		    	 var geoloccontrol = new klokantech.GeolocationControl(app.map, 15);
-	    	  
+		    	  app.addYourLocationButton(position);
+		    	/*  var geolocationDiv = document.createElement('div');
+		    	  var geolocationControl = new app.GeolocationControl(geolocationDiv, app.map,position);
+		    	  app.map.controls[google.maps.ControlPosition.TOP_CENTER].push(geolocationDiv);*/
 		    }
 				app.setMarkerDevices();
 	    	
+		},
+		addYourLocationButton:function(position) 
+		{
+		    var controlDiv = document.createElement('div');
+		    var firstChild = document.createElement('button');
+		    firstChild.style.backgroundColor = '#fff';
+		    firstChild.style.border = 'none';
+		    firstChild.style.outline = 'none';
+		    firstChild.style.width = '28px';
+		    firstChild.style.height = '28px';
+		    firstChild.style.borderRadius = '2px';
+		    firstChild.style.boxShadow = '0 1px 4px rgba(0,0,0,0.3)';
+		    firstChild.style.cursor = 'pointer';
+		    firstChild.style.marginRight = '10px';
+		    firstChild.style.padding = '0';
+		    firstChild.title = 'Your Location';
+		    controlDiv.appendChild(firstChild);
+
+		    var secondChild = document.createElement('div');
+		    secondChild.style.margin = '5px';
+		    secondChild.style.width = '18px';
+		    secondChild.style.height = '18px';
+		    secondChild.style.backgroundImage = 'url(https://maps.gstatic.com/tactile/mylocation/mylocation-sprite-2x.png)';
+		    secondChild.style.backgroundSize = '180px 18px';
+		    secondChild.style.backgroundPosition = '0 0';
+		    secondChild.style.backgroundRepeat = 'no-repeat';
+		    firstChild.appendChild(secondChild);
+
+		    google.maps.event.addListener(app.map, 'center_changed', function () {
+		        secondChild.style['background-position'] = '0 0';
+		    });
+		    firstChild.addEventListener('click', function () {
+		        var imgX = '0',
+		            animationInterval = setInterval(function () {
+		                imgX = imgX === '-18' ? '0' : '-18';
+		                secondChild.style['background-position'] = imgX+'px 0';
+		            }, 500);
+
+		        //if(navigator.geolocation) {
+		         //   navigator.geolocation.getCurrentPosition(function(position) {
+		                var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+		                app.map.setCenter(latlng);
+		                clearInterval(animationInterval);
+		                secondChild.style['background-position'] = '-144px 0';
+		           // });
+		        /*} else {
+		            clearInterval(animationInterval);
+		            secondChild.style['background-position'] = '0 0';
+		        }*/
+		    });
+
+		    controlDiv.index = 1;
+		    app.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(controlDiv);
+		},
+	    GeolocationControl:function(controlDiv, map,position) {
+
+		    // Set CSS for the control button
+		    var controlUI = document.createElement('div');
+		    controlUI.style.backgroundColor = '#444';
+		    controlUI.style.borderStyle = 'solid';
+		    controlUI.style.borderWidth = '1px';
+		    controlUI.style.borderColor = 'white';
+		    controlUI.style.height = '28px';
+		    controlUI.style.marginTop = '5px';
+		    controlUI.style.cursor = 'pointer';
+		    controlUI.style.textAlign = 'center';
+		    controlUI.title = 'Click to center map on your location';
+		    controlDiv.appendChild(controlUI);
+
+		    // Set CSS for the control text
+		    var controlText = document.createElement('div');
+		    controlText.style.fontFamily = 'Arial,sans-serif';
+		    controlText.style.fontSize = '10px';
+		    controlText.style.color = 'white';
+		    controlText.style.paddingLeft = '10px';
+		    controlText.style.paddingRight = '10px';
+		    controlText.style.marginTop = '8px';
+		    controlText.innerHTML = 'Your location';
+		    controlUI.appendChild(controlText);
+		    // Setup the click event listeners to geolocate user
+		    google.maps.event.addDomListener(controlUI, 'click', function(){
+		    	app.geolocate(position);
+		    });
+		},
+		 geolocate:function(position) {
+
+		 //   if (navigator.geolocation) {
+
+		  //      navigator.geolocation.getCurrentPosition(function (position) {
+
+		            var pos = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+
+		            // Create a marker and center map on user location
+		            marker = new google.maps.Marker({
+		                position: pos,
+		                draggable: true,
+		                animation: google.maps.Animation.DROP,
+		                map: app.map
+		            });
+		            app.map.setCenter(pos);
+		    //    });
+		   // }
 		},
 		onMapError:function(){
 			app.iPickView.alert("Please Active GPS to see the map","Error");
