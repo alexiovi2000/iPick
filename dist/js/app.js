@@ -472,15 +472,18 @@ var app = {
 				    });
 				    
 				    cordova.plugins.locationManager.requestAlwaysAuthorization();
+			        evothings.easyble.closeConnectedDevices();
 			    }
 			    
 			    else{
 			    	cordova.plugins.locationManager.requestWhenInUseAuthorization();
+			    	app.disconnectToDevice();
 			    }
-			    app.disconnectToDevice();
+			   
 			    var delegate = new cordova.plugins.locationManager.Delegate();
 			    cordova.plugins.locationManager.setDelegate(delegate); 
-			    this.devices = [];       
+			    app.devices = [];
+			    app.myDevices = [];
 				this.pictureSource = navigator.camera.PictureSourceType,
 			    this.destinationType = navigator.camera.DestinationType,  
 				this.db =  window.openDatabase("DatabasePick", "1.0", "Pick", 200000);
@@ -1849,7 +1852,7 @@ var app = {
 				},        
 				function(error)      
 				{     
-				}, { serviceUUIDs: serviceUUid }
+				}, { serviceUUIDs: serviceUUid,allowDuplicates:true }
 			    );
 		    
 		},
@@ -1889,12 +1892,7 @@ var app = {
 					device.connect(         
 							function(device)    
 							{   
-								if (device.__isConnected){
 								    app.readServices(device,false);  
-								}
-								else{
-									device.close();
-								}
 							},    
 							function(errorCode)   
 							{  
@@ -1904,6 +1902,13 @@ var app = {
 								app.startScan();
 							});     
 				
+				}else if(device && app.isMyDevice(device.address)  && device.isConnected()){
+					 for (var i=0;i<app.myDevices.length;i++){
+						 if (app.myDevices[i].address == device.address){
+						     app.myDevices[i].lastUpdate = Date.now();
+							 app.myDevices[i].connected = 'connected';
+						 }
+					 }
 				}
 			}
 		},    
@@ -2335,7 +2340,8 @@ var app = {
 				},
 				function(error)  
 				{
-					alert('Error: Failed to read services: ' + JSON.stringify(error));
+					//alert('Error: Failed to read services: ' + JSON.stringify(error));
+					device.close();
 				});
 		},
 	    onToggleButton: function(address)
