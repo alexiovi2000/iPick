@@ -55,6 +55,7 @@ var app = {
 	    destinationType:'' ,
 	    currentPosition: null,
 	    t:0,
+	    idUser:'',
 	    markers:new Array(),
 	    markerDeviceNotConnected:new Array(),
 	    mapJustResized:0,
@@ -299,20 +300,25 @@ var app = {
 			  
 			    var silentMode = localStorage.getItem('piksilentmode');
 			    
-			    if (silentMode){
+			    if (silentMode=='true'){
 			    	app.silent = true;
 			    	$$("#checkBoxVal").prop("checked",true);
 			    }
-			  
-			     $$("#info_id").on('click',function(){
+			    else{
+			    	$$("#checkBoxVal").prop("checked",false);
+			    }
+			     
+			    $$("#info_id").on('click',function(){
 			    	app.iPickView.pickerModal('.picker-infopik');
 				 });
 			      
 			     
 			     $$("#silentMode").on('click',function(){
 			    	 app.silent = !($$("#checkBoxVal").prop("checked"));
+			    	 if (app.os=='ios'){
+			    		 $$("#checkBoxVal").prop("checked",app.silent);
+			    	 }
 			    	 localStorage.setItem('piksilentmode',app.silent);  
-			    	 
 			     });
 			           
 			     
@@ -430,6 +436,8 @@ var app = {
 				    		       }
 				    		       else{
 				    		    	 localStorage.setItem('tokenPick',data.token);  
+				    		    	 localStorage.setItem('idUser',data.idUser);
+				    		    	 app.idUser = data.idUser;
 				    		    	 localStorage.setItem('usernamePiK',username);
 				    		    	 window.location='index.html';     
 				    		       }
@@ -442,6 +450,9 @@ var app = {
 				    	
 					 return;
 				    }
+				    
+				     app.idUser = localStorage.getItem('idUser');
+				    
 					 if (!app.myDevices.length){       
 							//app.showMyDevice();      
 						 app.disconnectToDevice();         
@@ -557,14 +568,28 @@ var app = {
 				   });    
 				  
 				   $$('.swipeout.swipeDevice').on('deleted', function (e) {
-					   console.log("anche di qua");  
+					   
+					   
 					var idDevice = $$(this).attr('idDevice')*1;
 					app.db.transaction(
 					       function(tx){
 					    	   app.deleteDevice(tx,idDevice)
+					    	   
 					    	   for (var i=0;i<app.myDevices.length;i++){
 					    		   if (app.myDevices[i].id == idDevice){
 					    			   var address = app.myDevices[i].address;
+					    			   
+					    			   cordovaHTTP.post("http://ipicktrack.altervista.org/api/log", {
+							    		    table: 'pik' ,
+							    		    idUtente: app.idUser,
+							    		    nome:app.myDevices[i].name,
+							    		    icona:'icon',
+							    		    indirizzo:address,
+							    		    operazione:'D'  
+							    		}, { }, function(response) {
+							    		}, function(response) {
+							    		});
+					    			   
 					    			   var dev = app.devices[address]
 					    			   if (dev){
 					    				   dev.close();
@@ -674,6 +699,7 @@ var app = {
 					   	var rssiDist = app.calculateRssiDist(rssi); 
 					   	$$(".row").children('div').removeClass('col-100-big');
 					   	$$(".row").children('div').children('div').removeClass('antenna-big');
+					   	$("#rssi_n").html(rssiDist);
 					   	var antenna = '';
 					   	if (rssiDist<=1000){      
 					   		antenna = 5;
@@ -819,13 +845,32 @@ var app = {
 				});
 				  
 				$$("#updateDevice").on('click',function(){
+					
+					 for (var i=0;i<app.myDevices.length;i++){
+						 if (app.myDevices[i].id == page.query.id){
+					    	 var addressDeviceSelectedOption = app.myDevices[i].address;
+					    	 break;
+						 }
+	  				 }
+					
 					//if($$("#namePick_id").val() && app.newDeviceFoto){
 						if (!$$("#namePick_id").val()){
 							app.iPickView.alert("Name's pick is mandatory","Error");
 	                		return;
 						}
 						
-						app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"));
+						cordovaHTTP.post("http://ipicktrack.altervista.org/api/log", {
+			    		    table: 'pik' ,
+			    		    idUtente: app.idUser,
+			    		    nome:$$("#namePick_id").val(),
+			    		    icona:'icon',
+			    		    indirizzo:addressDeviceSelectedOption,
+			    		    operazione:'U'  
+			    		}, { }, function(response) {
+			    			app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"));
+			    		}, function(response) {
+			    			app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"));
+			    		});
 						              
 				});  
 				 
@@ -1010,8 +1055,13 @@ var app = {
 				 $$('.swipeout.swipeList').on('open', function (e) {
 					 var idList = $$(this).attr('idList')*1;
 				   });    
-				                      
+				        
+				 
+				 
+				 
+				 
 				   $$('.swipeout.swipeList').on('deleted', function (e) {
+					   
 					var idList = $$(this).attr('idList')*1;
 					var colorList = $$(this).attr('colorList');
 					app.db.transaction( 
@@ -1023,7 +1073,6 @@ var app = {
 					    			   break;   
 					    		   }         
 					    	   }    
-					    	   
 					    	   for(var i=0;i<app.myDevices.length;i++){
 					    			var indexToDelete = app.myDevices[i].list.indexOf(colorList);
 					    			if (indexToDelete>-1){
@@ -1079,6 +1128,7 @@ var app = {
 	                               arrayNvoltePikPresi[address] = new Array();
 	                               arrayNvoltePikPresi[address]['preso']=0;
 	                               arrayNvoltePikPresi[address]['nopreso']=0;
+	                               app.iPickView.showPreloader();
 								   app.checkDeviceIfConnectedById(id,address,arrayNvoltePikPresi,0);
 								}, app.errorCB);          
 						  }, app.errorCB);   
@@ -1108,6 +1158,8 @@ var app = {
 				$$('.chooseDeviceToAddList').on('click',function(e){
 					 app.iPickView.closeModal('.picker-1');
 					 var elClicked = $$(this).prop('id')*1;
+					 
+					 
 					  app.db.transaction(function(tx){
 							 app.iPickView.closeModal('.picker-1');
 						    tx.executeSql('insert into deviceinlist (idlist,iddevice) values (?,?)', [parseInt(page.query.id),elClicked], 
@@ -1115,6 +1167,17 @@ var app = {
 						    	app.numberReloadListPage = 0;
 						    	for(var i=0;i<app.myDevices.length;i++){
 						    		if (app.myDevices[i].id == elClicked){
+						    			
+						    			 cordovaHTTP.post("http://ipicktrack.altervista.org/api/log", {
+								    		    table: 'piklist' ,
+								    		    idUtente: app.idUser,
+								    		    nomelista:page.query.id,
+								    		    pik_address:app.myDevices[i].address,
+								    		    operazione:'I'  
+								    		}, { }, function(response) {
+								    		}, function(response) {
+								    		});
+						    			
 						    			app.myDevices[i].list.push(page.query.color);
 						    		}
 						    	}         
@@ -1131,6 +1194,17 @@ var app = {
 					    	   app.deleteDeviceInList(tx,idDevice);
 					    	   for(var i=0;i<app.myDevices.length;i++){
 						    		if (app.myDevices[i].id == idDevice){
+						    			
+						    			 cordovaHTTP.post("http://ipicktrack.altervista.org/api/log", {
+								    		    table: 'piklist' ,
+								    		    idUtente: app.idUser,
+								    		    nomelista:'nameList',
+								    		    pik_address:app.myDevices[i].address,
+								    		    operazione:'D'  
+								    		}, { }, function(response) {
+								    		}, function(response) {
+								    		});
+						    			
 						    			var indexToDelete = app.myDevices[i].list.indexOf(page.query.color);
 						    			app.myDevices[i].list.splice(indexToDelete, 1); 	
 						    		}
@@ -1775,6 +1849,7 @@ var app = {
 						   app.checkDeviceIfConnectedById(nexId,nextAddress,arrayNvoltePikPresi,nvolte);
 					   }
 					   else{
+						   app.iPickView.hidePreloader();
 						   app.printResultCheckList();
 					   }
 					   
@@ -1788,6 +1863,7 @@ var app = {
 						   app.checkDeviceIfConnectedById(nexId,nextAddress);
 					   }
 					   else{
+						   app.iPickView.hidePreloader();
 						   app.printResultCheckList();
 					   }
 				 }); 
@@ -2235,7 +2311,20 @@ var app = {
 			app.iPickView.alert("Please Active GPS to see the map","Error");
 		},
 		saveNewDevice:function(device,nameDevice,imageDevice){
-		  app.setMyDevice(device.address,nameDevice,imageDevice);
+			
+			cordovaHTTP.post("http://ipicktrack.altervista.org/api/log", {
+    		    table: 'pik' ,
+    		    idUtente: app.idUser,
+    		    nome:nameDevice,
+    		    icona:'icon',
+    		    indirizzo:device.address,
+    		    operazione:'I'  
+    		}, { }, function(response) {
+    			 app.setMyDevice(device.address,nameDevice,imageDevice);
+    		}, function(response) {
+    			 app.setMyDevice(device.address,nameDevice,imageDevice);
+    		});
+			
 		 // app.initialize();
 		
 		},
@@ -2270,10 +2359,35 @@ var app = {
 		    });    
 		},
 		saveNewList:function(nameList,color,iconChoose){
-			app.setMyList(nameList,color,iconChoose);
+			cordovaHTTP.post("http://ipicktrack.altervista.org/api/log", {
+    		    table: 'list' ,
+    		    idUtente: app.idUser,
+    		    nome:nameList,
+    		    icona:iconChoose,
+    		    operazione:'I'  
+    		}, { }, function(response) {
+    			app.setMyList(nameList,color,iconChoose);
+    		}, function(response) {
+    			app.setMyList(nameList,color,iconChoose);
+    		});
 		},
 		saveUpdateList:function(idList,nameList,color,nameimagelist){
-			app.updateList(idList,nameList,color,nameimagelist);
+			
+    		cordovaHTTP.post("http://ipicktrack.altervista.org/api/log", {
+    		    table: 'list' ,
+    		    idUtente: app.idUser,
+    		    nome:nameList,
+    		    icona:nameimagelist,
+    		    operazione:'U'
+    		}, { }, function(response) {
+    			app.updateList(idList,nameList,color,nameimagelist);
+    		}, function(response) {
+    			app.updateList(idList,nameList,color,nameimagelist);
+    		});
+			
+			
+			
+			
 		},
 		logClick:function(device,fromConnection){
 			device.enableServiceNotification(
@@ -2380,7 +2494,7 @@ document.addEventListener('deviceready', function(){
           app.os = 'ios';		
 	}
 	else{
-		app.os = 'android';
+		app.os = 'android';  
 	}
 	var path = window.location.pathname;
 	if (app.os=='android'){
