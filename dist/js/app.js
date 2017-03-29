@@ -350,12 +350,14 @@ var app = {
 				    	});
 				    	
                         $$("#register_reg_id").on('click',function(){
+                        	var name = $$("#name_reg").val();
+                        	var surname = $$("#surname_reg").val();
                             var email =   $$("#email_reg").val();
                             var username =$$("#username_reg").val();
                             var password =$$("#password_reg").val();
                             var password2 = $$("#password2_reg").val();
                         	
-                        	if (!email || !username || !password || !password2){
+                        	if (!name || !surname || !email || !username || !password || !password2){
                         		app.iPickView.alert("All fields are mandatory","Error");
                         		return;
                         	}
@@ -378,8 +380,8 @@ var app = {
 				    		
 				    		 app.iPickView.showPreloader();
 					    		cordovaHTTP.post("http://ipicktrack.altervista.org/api/users", {
-					    		    nome: 'name' ,
-					    		    cognome: 'surname',
+					    		    nome: name ,
+					    		    cognome: surname,
 					    		    email:email,
 					    		    username:username,
 					    		    password: password
