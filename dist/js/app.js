@@ -1755,8 +1755,9 @@ var app = {
 										}, app.errorCB);  
 									   }); 
 							 },{enableHighAccuracy: true});
-					if (!app.devices[address].alerted){
-							 app.devices[address].alerted = true;
+					if ((app.os=='android' && !app.devices[address].alerted) || (app.os=='ios' && app.myDevices[dev].alerted)){
+						     app.myDevices[dev].alerted=false;
+						     app.devices[address].alerted = true;
 							 if (!app.silent){
 								 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
 									 cordova.plugins.notification.local.schedule({
@@ -1770,6 +1771,10 @@ var app = {
 									 }
 								 }
 							 }
+					}else{
+						if (app.os=='ios'){
+							app.myDevices[dev].alerted = true;
+						}
 					}
 			  }	   
 		 }        
@@ -1972,8 +1977,18 @@ var app = {
 							},    
 							function(errorCode)   
 							{  
-								delete app.devices[i];  	
-								app.alertDeviceConnectionLost(device.address);
+								
+								for (var i=0;i<app.myDevices.length;i++){
+									 if (app.myDevices[i].address == device.address){
+									     break;
+									 }
+								 }
+								if (app.myDevices[i].alerted || app.os=='android'){
+									app.alertDeviceConnectionLost(device.address);
+								}
+								else{
+									app.myDevices[i].alerted = true;
+								}
 								app.stopStop();
 								app.startScan();
 							});     
@@ -2396,6 +2411,7 @@ var app = {
 			  function(data)  
 			  {  
 			    var res = new Uint8Array(data)[0];
+			    
 			    if (res == 8){
 			    	var address =device.address;
 			    	if (app.devicesRing[address]){
