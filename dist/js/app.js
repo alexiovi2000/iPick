@@ -1839,19 +1839,22 @@ var app = {
 						   
 						   //media;
 						   var tot = 0;
+						   var min = 100000;
 						   for (var k = 0;k<arrayNvoltePikPresi[address]['values'].length;k++){
-							   tot += arrayNvoltePikPresi[address]['values'][k];
+							   if (arrayNvoltePikPresi[address]['values'][k]<min){
+								   min = arrayNvoltePikPresi[address]['values'][k];
+							   }
 						   }
-						   var media = tot/arrayNvoltePikPresi[address]['values'].length;
+						  // var media = tot/arrayNvoltePikPresi[address]['values'].length;
 						   
 						  /* if (arrayNvoltePikPresi[address]['preso']>=3){
 								app.deviceWithYou.push(app.myDevices[dev].name);
 						   }
-						   else{
+						   else{  
 							   app.deviceNotWithYou.push(app.myDevices[dev].name);
 						   }*/
 						   
-						    if (media<=7000){
+						    if (min<=7000){
 						    	app.deviceWithYou.push(app.myDevices[dev].name);
 						    }
 						    else{
