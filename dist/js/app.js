@@ -1129,6 +1129,7 @@ var app = {
 	                               var arrayNvoltePikPresi = new Array();
 	                               arrayNvoltePikPresi[address] = new Array();
 	                               arrayNvoltePikPresi[address]['preso']=0;
+	                               arrayNvoltePikPresi[address]['values']= new Array();
 	                               arrayNvoltePikPresi[address]['nopreso']=0;
 	                               app.iPickView.showPreloader();
 								   app.checkDeviceIfConnectedById(id,address,arrayNvoltePikPresi,0);
@@ -1361,7 +1362,7 @@ var app = {
             		    });    
 
         			  
-        			  app.markers.push(marker);    
+        			     app.markers.push(marker);    
         			  
         				google.maps.event.addListener(marker,'click', function(map,marker,infowindow){ 
         	             	  return function() {
@@ -1744,8 +1745,8 @@ var app = {
 									 var lat =  app.currentPosition.Lat;
 									 app.myDevices[dev].lat = app.currentPosition.Lat ;
 									 app.myDevices[dev].long = app.currentPosition.Long ;
-									 app.db.transaction(function(tx){
-									  tx.executeSql('update devices set lat = ? , long = ? ,last_seen = ? where id = ?', [app.currentPosition.Lat,app.currentPosition.Long,app.nowLost,app.idLost], 
+									 app.db.transaction(function(tx){ 
+									  tx.executeSql('update devices set lat = ? , long = ? ,last_seen = ? where address = ?', [app.currentPosition.Lat,app.currentPosition.Long,app.nowLost,address],  
 										 function(tx, results){  
 										}, app.errorCB);  
 									   }); 
@@ -1825,25 +1826,45 @@ var app = {
 					   if (rssi<= 0){
 						   	var rssiDist = app.calculateRssiDist(rssi); 
 						   	var preso = false;
+						   	arrayNvoltePikPresi[address]['values'].push(rssiDist);
 						   	if (rssiDist<=7000){  
 						   		preso = true;
 						   		arrayNvoltePikPresi[address]['preso']++;
+						   		
 						   	}else{
 						   		arrayNvoltePikPresi[address]['nopreso']++;
 						   	} 
 				     	}
 					   if (nvolte == 5){
-						   if (arrayNvoltePikPresi[address]['preso']>=3){
+						   
+						   //media;
+						   var tot = 0;
+						   for (var k = 0;k<arrayNvoltePikPresi[address]['values'].length;k++){
+							   tot += arrayNvoltePikPresi[address]['values'][k];
+						   }
+						   var media = tot/arrayNvoltePikPresi[address]['values'].length;
+						   
+						  /* if (arrayNvoltePikPresi[address]['preso']>=3){
 								app.deviceWithYou.push(app.myDevices[dev].name);
 						   }
 						   else{
 							   app.deviceNotWithYou.push(app.myDevices[dev].name);
-						   }
+						   }*/
+						   
+						    if (media<=7000){
+						    	app.deviceWithYou.push(app.myDevices[dev].name);
+						    }
+						    else{
+						    	app.deviceNotWithYou.push(app.myDevices[dev].name);
+						    }
+						   
+						   
 						   var nextAddress = app.checkDeviceArrayAddress.pop();
 						   var nexId =   app.checkDeviceArrayId.pop();
 						   arrayNvoltePikPresi[nextAddress] = new Array();
 						   arrayNvoltePikPresi[nextAddress]['preso']  = 0;
 						   arrayNvoltePikPresi[nextAddress]['nopreso']= 0;
+						   arrayNvoltePikPresi[nextAddress]['values']= new Array();
 						   nvolte = 0;
 					   }
 					   else{
