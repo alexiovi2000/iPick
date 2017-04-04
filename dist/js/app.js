@@ -1,5 +1,4 @@
-
-/*window.onerror = function (msg, url, lineNo, columnNo, error) {
+window.onerror = function (msg, url, lineNo, columnNo, error) {
     var string = msg.toLowerCase();
     var substring = "script error";
     if (string.indexOf(substring) > -1){
@@ -17,12 +16,11 @@
     }
 
     return false;
-};*/
+};
 var $$ = Dom7;
 
 var i=false;
      
-
   
 var app = {
 		deviceType:'',
@@ -854,7 +852,6 @@ var app = {
 					    	 break;
 						 }
 	  				 }
-					
 					//if($$("#namePick_id").val() && app.newDeviceFoto){
 						if (!$$("#namePick_id").val()){
 							app.iPickView.alert("Name's pick is mandatory","Error");
@@ -869,13 +866,19 @@ var app = {
 			    		    indirizzo:addressDeviceSelectedOption,
 			    		    operazione:'U'  
 			    		}, { }, function(response) {
-			    			app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"));
+			    			app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"),addressDeviceSelectedOption);
 			    		}, function(response) {
-			    			app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"));
+			    			app.updateDevice(page.query.id, $$("#namePick_id").val(), app.updateDeviceFoto,$$("#safetymode_id").prop("checked"),addressDeviceSelectedOption);
 			    		});
 						              
 				});  
-				 
+				    
+				$$("#alertMode_id").on('click',function(){
+				    	 app.alertMode = !($$("#checkBoxVal").prop("checked"));
+				    	 if (app.os=='ios'){
+				    		 $$("#safetymode_id").prop("checked",app.alertMode);
+				    	 }
+				     });
 				 
 			 });
 		},
@@ -1037,6 +1040,10 @@ var app = {
 					$$("#saveUpdateList").on('click',function(){
 						
 						if (!$$("#List_id_upd").val()){
+							app.iPickView.alert("Name's list is mandatory","Error");
+                    		return;
+						}
+						if (!app.iconChoose){
 							app.iPickView.alert("Name's list is mandatory","Error");
                     		return;
 						}
@@ -1620,7 +1627,11 @@ var app = {
 						if (!colorChoosen){
 							app.iPickView.alert("Color's list is mandatory","Error");
                     		return;
-					 }     
+					    }     
+						if (!app.iconChoose){
+							app.iPickView.alert("Icon's list is mandatory","Error");
+                    		return;
+					    }     
 						app.saveNewList($$("#List_id").val(),colorChoosen,app.iconChoose);
 				});  
 			  });      
@@ -1723,64 +1734,93 @@ var app = {
 			  */
 			var diff = (4 - rssi)/20;
 			var dist = Math.pow(10,diff);
-			
-			
-			 return dist;
+		    return dist;
 		},
 		alertDeviceConnectionLost:function(address){ 
-			
-			 for (var dev in app.myDevices){
-				 if (app.myDevices[dev].address == address){
-					 app.idLost = app.myDevices[dev].id;
-					 app.nowLost = Date.now();
-					 app.myDevices[dev].last_seen =  Date.now();
-					 app.myDevices[dev].connected = 'notconnected';  
-					 app.myDevices[dev].lastUpdate = Date.now();
-					 navigator.geolocation.getCurrentPosition(
-							 function(position){
-									app.currentPosition =  {	 
-										    'Lat': position.coords.latitude,
-										    'Long': position.coords.longitude
-									      };
-									 var lat =  app.currentPosition.Lat;
+			 navigator.geolocation.getCurrentPosition(
+					 function(position){
+							app.currentPosition =  {	 
+								    'Lat': position.coords.latitude,
+								    'Long': position.coords.longitude
+							      };
+							 var lat =  app.currentPosition.Lat;
+							 for (var dev in app.myDevices){
+								 if (app.myDevices[dev].address == address){
+									 app.idLost = app.myDevices[dev].id;
+									 app.nowLost = Date.now();
+									 app.myDevices[dev].last_seen =  Date.now();
+									 app.myDevices[dev].connected = 'notconnected';  
+									 app.myDevices[dev].lastUpdate = Date.now();
 									 app.myDevices[dev].lat = app.currentPosition.Lat ;
 									 app.myDevices[dev].long = app.currentPosition.Long ;
 									 app.db.transaction(function(tx){ 
-									  tx.executeSql('update devices set lat = ? , long = ? ,last_seen = ? where address = ?', [app.currentPosition.Lat,app.currentPosition.Long,app.nowLost,address],  
-										 function(tx, results){  
-										}, app.errorCB);  
-									   }); 
-									
-							 },function(){
+										  tx.executeSql('update devices set lat = ? , long = ? ,last_seen = ? where address = ?', [app.currentPosition.Lat,app.currentPosition.Long,app.nowLost,address],  
+											 function(tx, results){  
+											}, app.errorCB);  
+										   }); 
+									 
+									if ((app.os=='android' && !app.devices[address].alerted) || (app.os=='ios' && app.myDevices[dev].alerted)){
+											     app.myDevices[dev].alerted=false;
+											     app.devices[address].alerted = true;
+												 if (!app.silent){
+													 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
+														 cordova.plugins.notification.local.schedule({
+												    			id: app.idNotification,
+												    			title: app.myDevices[dev].name });
+														 app.idNotification++;
+														 app.ringCell();
+													 }else{
+														 if (app.myDevices[dev].safetymode=="checked"){
+															 app.ringCell();
+														 }
+													 }
+												 }
+										}else{
+											if (app.os=='ios'){
+												app.myDevices[dev].alerted = true;
+											}
+										}
+								 }
+							 }
+							
+					 },function(){
+						 for (var dev in app.myDevices){
+							 if (app.myDevices[dev].address == address){
+								 app.idLost = app.myDevices[dev].id;
+								 app.nowLost = Date.now();
+								 app.myDevices[dev].last_seen =  Date.now();
+								 app.myDevices[dev].connected = 'notconnected';  
 								 app.db.transaction(function(tx){
 									  tx.executeSql('update devices set last_seen = ? where id = ?', [app.nowLost,app.idLost], 
 										 function(tx, results){  
 										}, app.errorCB);  
 									   }); 
-							 },{enableHighAccuracy: true});
-					if ((app.os=='android' && !app.devices[address].alerted) || (app.os=='ios' && app.myDevices[dev].alerted)){
-						     app.myDevices[dev].alerted=false;
-						     app.devices[address].alerted = true;
-							 if (!app.silent){
-								 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
-									 cordova.plugins.notification.local.schedule({
-							    			id: app.idNotification,
-							    			title: app.myDevices[dev].name });
-									 app.idNotification++;
-									 app.ringCell();
-								 }else{
-									 if (app.myDevices[dev].safetymode=="checked"){
-										 app.ringCell();
-									 }
-								 }
 							 }
-					}else{
-						if (app.os=='ios'){
-							app.myDevices[dev].alerted = true;
-						}
-					}
-			  }	   
-		 }        
+							 
+							  if ((app.os=='android' && !app.devices[address].alerted) || (app.os=='ios' && app.myDevices[dev].alerted)){
+								     app.myDevices[dev].alerted=false;
+								     app.devices[address].alerted = true;
+									 if (!app.silent){
+										 if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
+											 cordova.plugins.notification.local.schedule({
+									    			id: app.idNotification,
+									    			title: app.myDevices[dev].name });
+											 app.idNotification++;
+											 app.ringCell();
+										 }else{
+											 if (app.myDevices[dev].safetymode=="checked"){
+												 app.ringCell();
+											 }
+										 }
+									 }
+							}else{
+								if (app.os=='ios'){
+									app.myDevices[dev].alerted = true;
+								}
+							}
+						 }
+						
+					 },{enableHighAccuracy: true});
 		},  
 		ringCell:function(){
 		     if (app.os=='android'){
@@ -1813,7 +1853,7 @@ var app = {
 			 */
 			var connected = false;
 			for (var dev in app.myDevices){
-				if (id == app.myDevices[dev].id){
+				if (app.myDevices[dev] && id == app.myDevices[dev].id){
 					if (app.myDevices[dev].connected == 'connected'){
 						connected =  true; 
 					}
@@ -1854,7 +1894,7 @@ var app = {
 							   app.deviceNotWithYou.push(app.myDevices[dev].name);
 						   }*/
 						   
-						    if (min<=7000){
+						    if (min<=6000){
 						    	app.deviceWithYou.push(app.myDevices[dev].name);
 						    }
 						    else{
@@ -1907,6 +1947,7 @@ var app = {
 					   app.checkDeviceIfConnectedById(nexId,nextAddress);
 				   }
 				   else{
+					   app.iPickView.hidePreloader();
 					   app.printResultCheckList();
 					  
 				   }
@@ -2369,7 +2410,7 @@ var app = {
 		 // app.initialize();
 		
 		},
-		updateDevice:function(id,name,image,safetymode){
+		updateDevice:function(id,name,image,safetymode,address){
 			var idDevice = id*1;    
 			if (safetymode==true){
 				safetymode = "checked";
@@ -2380,10 +2421,21 @@ var app = {
 		    app.db.transaction(function(tx){
 				  tx.executeSql('update devices set name = ? ,image = ? ,safetymode = ? where id = ?', [name,image,safetymode,idDevice],   
 					 function(tx, results){    
-					  for (var i in app.devices){
+					 
+					 /*for (var i in app.devices){
                           app.devices[i].close();
                      }
-					  window.location='index.html';        
+					  window.location='index.html';*/
+					  for (var dev in app.myDevices){
+							 if (app.myDevices[dev].address == address){
+								 app.myDevices[dev].name = name;
+								 app.myDevices[dev].image = image;
+								 app.myDevices[dev].safetymode = safetymode;
+							 }
+					  }
+					  
+					  clearInterval(app.intervalTemporizzatore);
+					  app.loadHome();
 					}, app.errorCB);
 		    });    
 		},   
