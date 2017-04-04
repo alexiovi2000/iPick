@@ -21,7 +21,6 @@ var $$ = Dom7;
 
 var i=false;
      
-  
 var app = {
 		deviceType:'',
 		timeStartScanNewDev:'',
@@ -165,16 +164,15 @@ var app = {
 				
 			};
 			  
-			myDev.push(obj); 
-			app.myDevices = myDev;
-			
 		    this.db.transaction(function(tx){
 				  tx.executeSql('insert into devices (id,address,name,image,connected, last_seen,safetymode) values (?,?,?,?,?,?,?)', [obj.id,obj.address,obj.name,obj.image ,obj.connected,obj.last_seen,obj.safetymode], 
 					 function(tx, results){  
-					  	for (var i in app.devices){
-					  		app.devices[i].close();
-					  	}
-					  	window.location='index.html';  
+					    obj.connected = 'connected';
+					    myDev.push(obj); 
+						 app.myDevices = myDev;
+						 clearInterval(app.intervalTemporizzatore);
+						 app.loadHome();
+					  	//window.location='index.html';  
 					}, app.errorCB);
 		    });  
 		},      
@@ -211,10 +209,14 @@ var app = {
 			 this.db.transaction(function(tx){
 				  tx.executeSql('insert into lists (id,name,image,color,nameimagelist) values (?,?,?,?,?)', [obj.id,obj.name,obj.image,obj.color,obj.nameimagelist], 
 					 function(tx, results){   
-					  for (var i in app.devices){
+					 /* for (var i in app.devices){
                           app.devices[i].close();
-                      }
-					  window.location='index.html';      
+                      }*/
+						app.listView.router.load({
+						    url: 'list.html',   
+						    animatePages: false,
+						    contextName:'devices'
+						});     
 					}, app.errorCB);
 			  }, app.errorCB);    
 		},
@@ -1411,6 +1413,8 @@ var app = {
 			    contextName:'devices',   
 			    animatePages: false
 			});  
+			app.viewMain.showNavbar();
+			$$("#toolbar_id").show();      
 			app.scanHome();
 		},      
 		scanHome:function(){
@@ -1481,7 +1485,7 @@ var app = {
 				 if (firstTime){
 					 app.listView.hideNavbar();
 				 }
-				 var colorChoosen = '';
+				app.colorChoosen = '';
 					$$('#listColorId_input').on('click', function () {
 						  // Check first, if we already have opened picker
 						  if ($$('.picker-modal.modal-in').length > 0) {
@@ -1520,32 +1524,32 @@ var app = {
 							   switch(txtClass){
 							   case 'redColor':{
 								   $$('.create-picker').css('background','#fd6366');
-								   colorChoosen = 'red';
+								   app.colorChoosen = 'red';
 							   }  
 							   break;
 							   case 'pinkColor':{
 								   $$('.create-picker').css('background','#fe96c9');
-								   colorChoosen = 'pink';
+								   app.colorChoosen = 'pink';
 							   }
 							   break;
 							   case 'greenColor':{
 								   $$('.create-picker').css('background','#64ca45');
-								   colorChoosen = 'green';
+								   app.colorChoosen = 'green';
 							   }
 							   break;
 							   case 'orangeColor':{
 								   $$('.create-picker').css('background','#fc9526');
-								   colorChoosen = 'orange';
+								   app.colorChoosen = 'orange';
 							   }
 							   break;
 							   case 'lblueColor':{
 								   $$('.create-picker').css('background','#2398c9');
-								   colorChoosen = 'lblue';
+								   app.colorChoosen = 'lblue';
 							   }
 							   break;  
 							   case 'blueColor':{
 								   $$('.create-picker').css('background','#003366');
-								   colorChoosen = 'blue';
+								   app.colorChoosen = 'blue';
 							   }
 							   break;  
 							   }
@@ -1624,7 +1628,7 @@ var app = {
 							app.iPickView.alert("Name's list is mandatory","Error");
                     		return;
 						}
-						if (!colorChoosen){
+						if (!app.colorChoosen){
 							app.iPickView.alert("Color's list is mandatory","Error");
                     		return;
 					    }     
@@ -1632,7 +1636,7 @@ var app = {
 							app.iPickView.alert("Icon's list is mandatory","Error");
                     		return;
 					    }     
-						app.saveNewList($$("#List_id").val(),colorChoosen,app.iconChoose);
+						app.saveNewList($$("#List_id").val(),app.colorChoosen,app.iconChoose);
 				});  
 			  });      
 			
@@ -2444,10 +2448,21 @@ var app = {
 			app.db.transaction(function(tx){
 				  tx.executeSql('update lists set name = ? ,image = ? ,color = ? , nameimagelist = ? where id = ?', [name,app.updateListFoto,color,nameimagelist,idList],   
 					 function(tx, results){   
-					  for (var i in app.devices){
-                          app.devices[i].close();
-                      }
-					  window.location='index.html'; 
+					  /*  for (var i in app.devices){
+                          	app.devices[i].close();
+                      	}*/
+					  for (var i in app.myLists){
+						  if (app.myLists[i].id==id){
+							  app.myLists[i].name = name;
+							  app.myLists[i].image = app.updateListFoto;
+							  app.myLists[i].color = color;
+						  }
+					  }
+					  app.listView.router.load({
+						    url: 'list.html',   
+						    animatePages: false,
+						    contextName:'devices'
+					  });     
 					}, app.errorCB);
 		    });    
 		},
