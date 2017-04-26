@@ -15,7 +15,7 @@
  alert(message);
  }
  
- return false;
+ //return false;
  };*/
 var $$ = Dom7;
 
@@ -46,6 +46,7 @@ newListFoto:{},
 updateDeviceFoto:{},
 deviceSelected:{},
 deviceInList:[],
+myposMarker:'',
 pictureSource: '' ,
 map:null,
 mapDevice:null,
@@ -313,7 +314,9 @@ loadFrameworkAndHome:function(){
 
                                                    }
                                                    }, function(error){
-                                                        app.iPickView.alert("Please, active GPS and restart to correctly use the app","GPS disabled");
+                                                	    if (app.os=='android'){
+                                                	    	app.iPickView.alert("Please, active GPS and restart to correctly use the app","GPS disabled");
+                                                	    }
                                                         app.loadPrintHome();
                                                    });
 
@@ -336,7 +339,7 @@ loadPrintHome:function(){
                       app.iPickView.pickerModal('.picker-infopik');
                       });
     
-    
+
     $$("#silentMode").on('click',function(){
                          app.silent = !($$("#checkBoxVal").prop("checked"));
                          if (app.os=='ios'){
@@ -739,11 +742,10 @@ getRssiAbout: function(addressItrackSelected,firstTime){
                              var rssiDist = app.calculateRssiDist(rssi);
                              $$(".row").children('div').removeClass('col-100-big');
                              $$(".row").children('div').children('div').removeClass('antenna-big');
-                             $("#rssi_n").html(rssiDist);
                              var antenna = '';
                              if (rssiDist<=1000){
                              antenna = 5;
-                             }
+                             } 
                              else if (rssiDist<=5000){
                              antenna = 4;
                              }
@@ -914,10 +916,10 @@ pageDeviceOption: function(){
                                                              });
                                       
                                       $$("#alertMode_id").on('click',function(){
-                                                             app.alertMode = !($$("#checkBoxVal").prop("checked"));
+                                                             app.alertMode = !($$("#safetymode_id").prop("checked"));
                                                              if (app.os=='ios'){
                                                              $$("#safetymode_id").prop("checked",app.alertMode);
-                                                             }
+                                                             } 
                                                              });
                                       
                                       });
@@ -1155,7 +1157,7 @@ pageInitList:function(){
                                                                                         var len=results.rows.length;
                                                                                         var deviceDisconnected = '';
                                                                                         if (!len){
-                                                                                        app.iPickView.alert("List empty","Info");
+                                                                                        app.iPickView.alert("List is empty","Info");
                                                                                         app.aParents.attr('href', app.href);
                                                                                         return;
                                                                                         }
@@ -1663,15 +1665,15 @@ addNewList: function(firstTime){
                                       
                                       $$("#saveNewList").on('click',function(){
                                                             if (!$$("#List_id").val()){
-                                                            app.iPickView.alert("Name's list is mandatory","Error");
+                                                            app.iPickView.alert("Name list is mandatory","Error");
                                                             return;
                                                             }
                                                             if (!app.colorChoosen){
-                                                            app.iPickView.alert("Color's list is mandatory","Error");
+                                                            app.iPickView.alert("Color list is mandatory","Error");
                                                             return;
                                                             }     
                                                             if (!app.iconChoose){
-                                                            app.iPickView.alert("Icon's list is mandatory","Error");
+                                                            app.iPickView.alert("Icon or Image is mandatory","Error");
                                                             return;
                                                             }     
                                                             app.saveNewList($$("#List_id").val(),app.colorChoosen,app.iconChoose);
@@ -1855,7 +1857,7 @@ alertDeviceConnectionLost:function(address){
                                                       if (app.atBackground && app.myDevices[dev].safetymode=="checked"){           
                                                       cordova.plugins.notification.local.schedule({
                                                                                                   id: app.idNotification,
-                                                                                                  title: app.myDevices[dev].name });
+                                                                                                  title: 'Alert! ' + app.myDevices[dev].name + 'too far' });
                                                       app.idNotification++;
                                                       app.ringCell();
                                                       }else{
@@ -2010,12 +2012,12 @@ checkDeviceIfConnectedById: function(id,address,arrayNvoltePikPresi,nvolte){
 },  
 printResultCheckList: function(){
     if (app.deviceNotWithYou.length){ 
-        app.iPickView.alert("Not with you: "+app.deviceNotWithYou.join(","),"Info");  
+        app.iPickView.alert("You forgot: "+app.deviceNotWithYou.join(","),"Alert");  
         app.listLi.children('i').addClass('fa-check-square-not-all-conn');
         app.listLi.children('i').removeClass('fa-check-square-all-conn');
     }  
     else{
-        app.iPickView.alert("You have taken everything!","Info");
+        app.iPickView.alert("You have taken everything!","Good job");
         app.listLi.children('i').removeClass('fa-check-square-not-all-conn');
         app.listLi.children('i').addClass('fa-check-square-all-conn');
     } 
@@ -2286,12 +2288,12 @@ chooseOptionsNewDevice: function(device){
                              $$("#saveNewDevice").on('click',function(){
                                                      //if($$("#namePick_id").val() && app.newDeviceFoto){
                                                      if (!$$("#namePick_id").val()){
-                                                     app.iPickView.alert("Name's pick is mandatory","Error");
+                                                     app.iPickView.alert("Name is mandatory","Error");
                                                      return;
                                                      }
                                                      
                                                      if (!app.newDeviceFoto){
-                                                     app.iPickView.alert("Image or Icon is Mandatory","Error");
+                                                     app.iPickView.alert("Icon or Image is mandatory","Error");
                                                      return;
                                                      }
                                                      
@@ -2325,7 +2327,8 @@ onMapSuccess:function (position) {
     if (!app.map){
         
 	    	  app.map = new google.maps.Map(document.getElementById('mapDiv'), {  
-                                            zoom: 15
+                                            zoom: 15,
+                                            mapTypeId: google.maps.MapTypeId.ROADMAP
                                             });
 	    	  
         app.map.setCenter({    
@@ -2368,31 +2371,31 @@ addYourLocationButton:function(position)
         secondChild.style.backgroundRepeat = 'no-repeat';
         firstChild.appendChild(secondChild);
         
-        google.maps.event.addListener(app.map, 'center_changed', function () {
-                                      secondChild.style['background-position'] = '0 0';
-                                      });
-        firstChild.addEventListener('click', function () {
-                                    var imgX = '0',
-                                    animationInterval = setInterval(function () {
-                                                                    imgX = imgX === '-18' ? '0' : '-18';
-                                                                    secondChild.style['background-position'] = imgX+'px 0';
-                                                                    }, 500);
-                                    
-                                    //if(navigator.geolocation) {
-                                    //   navigator.geolocation.getCurrentPosition(function(position) {
-                                    var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                                    app.map.setCenter(latlng);
-                                    clearInterval(animationInterval);
-                                    secondChild.style['background-position'] = '-144px 0';
-                                    // });
-                                    /*} else {
-                                     clearInterval(animationInterval);
-                                     secondChild.style['background-position'] = '0 0';
-                                     }*/
-                                    });
+        firstChild.addEventListener('click', function () {   var imgX = '0',
+            animationInterval = setInterval(function () {
+                imgX = imgX === '-18' ? '0' : '-18';
+                secondChild.style['background-position'] = imgX+'px 0';
+                }, 500);
+                
+               
+				var latlng = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+				app.map.setCenter(latlng);
+				if (app.marketMyPosition){
+					app.marketMyPosition.setMap(null);
+				}
+				app.marketMyPosition = new google.maps.Marker({
+                    position: latlng,
+                    draggable: true,
+                    map: app.map,
+                    icon: 'dotBlue.png'
+                    });
+				clearInterval(animationInterval);
+				secondChild.style['background-position'] = '-144px 0';
+        	});
         
         controlDiv.index = 1;
         app.map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(controlDiv);
+        
     },
 GeolocationControl:function(controlDiv, map,position) {
     
