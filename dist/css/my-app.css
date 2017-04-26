@@ -1,6 +1,17 @@
 .navbar .right {
 	 font-size: 1.5em;
 }
+.emptyList{
+	width: 40px;
+	padding: 0 6px;
+	display: block;
+	box-sizing: border-box;
+	text-align: center;
+	height: 15px;
+	line-height: 20px;
+	background-color: white; 
+	
+}
 .lblue{
 	background-color: #2398c9; 
 	box-sizing: border-box;
@@ -134,12 +145,7 @@
 .list-block .item-after {
 	display:block;
 }
-.centered {
-	  position: fixed;
-      top: 50%;
-      /* bring your own prefixes */
-       transform: translate(-50%, -50%);
-}
+
 .list-block .item-content-custom {
 	min-height: 80px;
 }
@@ -152,6 +158,10 @@
 .list-block .item-title-custom{
     width: 65%;
 	margin-top:18px;  
+	text-align:left;
+	align:left;
+	display:fixed;
+	margin-left:5px;
 }
 .connected{
 	background-color: Lime;
