@@ -173,8 +173,15 @@ setMyDevice:function(deviceAddress,name,image){
                                       myDev.push(obj);
                                       app.myDevices = myDev;
                                       clearInterval(app.intervalTemporizzatore);
-                                      app.loadHome();
-                                      //window.location='index.html';
+                                      if (app.myDevices.length == 1){
+                                    	  for (var i in app.devices){
+                       	        		   app.devices[i].close();
+                                          }
+                                    	  window.location='index.html';
+                                      }else{
+                                    	  app.loadHome();
+                                      }
+                                      //
                                       }, app.errorCB);
                         });
 },
@@ -211,14 +218,20 @@ setMyList:function(nameList,color,iconChoose){
 			 this.db.transaction(function(tx){
                                  tx.executeSql('insert into lists (id,name,image,color,nameimagelist) values (?,?,?,?,?)', [obj.id,obj.name,obj.image,obj.color,obj.nameimagelist],
                                                function(tx, results){
-                                               /* for (var i in app.devices){
-                                                app.devices[i].close();
-                                                }*/
-                                               app.listView.router.load({
-                                                                        url: 'list.html',
-                                                                        animatePages: false,
-                                                                        contextName:'devices'
-                                                                        });
+                                	 
+                                	           if (app.myLists.length == 1){
+                                	        	   for (var i in app.devices){
+                                	        		   app.devices[i].close();
+                                                   }
+                                	        	   window.location='index.html';
+                                	           }else{
+                                              
+	                                               app.listView.router.load({
+	                                                                        url: 'list.html',
+	                                                                        animatePages: false,
+	                                                                        contextName:'devices'
+	                                                                        });
+                                	           }
                                                }, app.errorCB);
                                  }, app.errorCB);
 },
